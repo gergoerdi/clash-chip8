@@ -1,0 +1,65 @@
+name: clash-chip8
+version: 0.1.0
+category: hardware, emulator
+
+dependencies:
+  - base
+  - clash-prelude
+  - clash-lib
+  - clash-ghc
+  - ghc-typelits-natnormalise
+  - ghc-typelits-extra
+  - ghc-typelits-knownnat
+
+  - retroclash-lib
+  - retroclash-sim
+
+  - clash-shake
+  - lens
+  - mtl
+  - transformers
+  # - sdl2
+  # - array
+  # - extra
+
+# Anything that Clash uses by default should go here
+default-extensions:
+  - BinaryLiterals
+  - ConstraintKinds
+  - DataKinds
+  - DeriveAnyClass
+  - DeriveGeneric
+  - DeriveLift
+  - DerivingStrategies
+  - ExplicitForAll
+  - ExplicitNamespaces
+  - FlexibleContexts
+  - FlexibleInstances
+  - KindSignatures
+  - MagicHash
+  - MonoLocalBinds
+  - NoImplicitPrelude
+  - NoMonomorphismRestriction
+  - NoStarIsType
+  - NoStrictData
+  - NoStrict
+  - QuasiQuotes
+  - ScopedTypeVariables
+  - TemplateHaskellQuotes
+  - TemplateHaskell
+  - TypeApplications
+  - TypeFamilies
+  - TypeInType
+  - TypeOperators
+
+ghc-options:
+  -fplugin GHC.TypeLits.KnownNat.Solver
+  -fplugin GHC.TypeLits.Normalise
+  -fplugin GHC.TypeLits.Extra.Solver
+
+source-dirs:
+  - src
+
+executables:
+  chip8:
+    main: simulator.hs

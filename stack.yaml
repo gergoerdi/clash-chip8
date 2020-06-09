@@ -1,0 +1,9 @@
+resolver: clash-HEAD.yaml
+
+extra-deps:
+  - clash-shake
+  - retroclash-lib
+  - retroclash-sim
+
+  - barbies-2.0.1.0
+  - barbies-th-0.1.2
