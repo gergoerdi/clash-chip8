@@ -1,0 +1,14 @@
+module CHIP8.Input where
+
+import CHIP8.Types
+
+import Clash.Prelude
+import RetroClash.Keypad
+
+layout :: Matrix 4 4 Key
+layout =
+    (0x1 :> 0x2 :> 0x3 :> 0xc :> Nil) :>
+    (0x4 :> 0x5 :> 0x6 :> 0xd :> Nil) :>
+    (0x7 :> 0x8 :> 0x9 :> 0xe :> Nil) :>
+    (0xa :> 0x0 :> 0xb :> 0xf :> Nil) :>
+    Nil
