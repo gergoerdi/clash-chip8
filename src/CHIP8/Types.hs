@@ -15,7 +15,7 @@ type VidY = Unsigned 5
 type VidRow = Word64
 
 type Key = Index 16
--- type KeypadState = Vec 16 Bool
+type KeypadState = Vec 16 Bool
 
 nybbles :: Byte -> (Nybble, Nybble)
 nybbles = bitCoerce

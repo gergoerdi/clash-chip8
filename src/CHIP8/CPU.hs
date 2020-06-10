@@ -21,6 +21,7 @@ import Data.Monoid (Last(..))
 import Control.Monad.Writer
 import Control.Monad.State
 import Control.Lens hiding (Index, assign)
+import Data.Foldable (for_)
 import Data.Maybe
 
 import Debug.Trace
@@ -29,8 +30,8 @@ declareBareB [d|
   data CPUIn = CPUIn
       { memRead :: Byte
       , vidRead :: VidRow
-      -- , keyState :: KeypadState
-      -- , keyEvent :: Maybe (Bool, Key)
+      , keyState :: KeypadState
+      , keyEvent :: Maybe (Bool, Key)
       , tick :: Bool
       } |]
 
@@ -99,10 +100,6 @@ step CPUIn{..} = do
     randomState %= lfsr
     when tick $ timer %= fromMaybe 0 . predIdx
 
-    -- do
-    --     CPUState{..} <- get
-    --     trace (show (_pc, memRead)) $ return ()
-
     use phase >>= \case
         Init -> phase .= Fetch
         Fetch -> do
@@ -115,10 +112,9 @@ step CPUIn{..} = do
                 addr <- uses ptr (+ fromIntegral i')
                 writeMem addr (toBCDRom x !! i')
                 phase .= WriteBCD x i'
-        WaitKeyPress reg -> return ()
--- for_ keyEvent $ \(pressed, key) -> when (not pressed) $ do
---             setReg reg $ fromIntegral key
---             goto $ Fetch
+        WaitKeyPress reg -> for_ keyEvent $ \(pressed, key) -> when (not pressed) $ do
+            setReg reg $ fromIntegral key
+            phase .= Fetch
         StoreReg reg -> case predIdx reg of
             Nothing -> phase .= Fetch
             Just reg' -> storeReg reg'
@@ -134,7 +130,6 @@ step CPUIn{..} = do
            addr <- uses ptr (+ fromIntegral row)
            vidAddr .:= y + fromIntegral row
            memAddr .:= addr
-           traceShow (x, y, row, addr) $ return ()
            phase .= DrawWrite x y row
         DrawWrite x y row -> do
            let bg = vidRead
@@ -198,8 +193,7 @@ step CPUIn{..} = do
                     phase .= DrawRead x y height'
                 SkipKeyIs b regX -> do
                     key <- fromIntegral <$> getReg regX
-                    -- let isPressed = keyState !! key
-                    let isPressed = False
+                    let isPressed = keyState !! key
                     when (isPressed == b) skip
                 WaitKey regX -> phase .= WaitKeyPress regX
                 GetTimer regX -> do
@@ -214,7 +208,7 @@ step CPUIn{..} = do
                     ptr += fromIntegral x
                 LoadFont regX -> do
                     x <- getReg regX
-                    ptr .= traceShowId (toFont x)
+                    ptr .= toFont x
                 StoreBCD regX -> do
                     x <- getReg regX
                     addr <- use ptr
