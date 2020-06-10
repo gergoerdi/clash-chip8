@@ -1,6 +1,7 @@
 module CHIP8.Opcode
     ( Fun(..), Op(..)
     , decodeInstr
+    , fatal
     ) where
 
 import Clash.Prelude
@@ -21,24 +22,14 @@ data Fun
     | ShiftLeft
     deriving (Show, Generic, NFDataX)
 
-data SkipCmp
-    = SkipIfEq
-    | SkipIfNEq
-    deriving (Show, Generic, NFDataX)
-
-data SkipKey
-    = SkipIfPressed
-    | SkipIfNotPressed
-    deriving (Show, Generic, NFDataX)
-
 data Op
     = ClearScreen
     | Ret
     | Sys Addr
     | Jump Addr
     | Call Addr
-    | SkipCmpImm SkipCmp Reg Byte
-    | SkipCmpReg SkipCmp Reg Reg
+    | SkipEqImmIs Bool Reg Byte
+    | SkipEqRegIs Bool Reg Reg
     | PutImm Reg Byte
     | AddImm Reg Byte
     | ALU Fun Reg Reg
@@ -46,7 +37,7 @@ data Op
     | JumpPlusR0 Addr
     | Randomize Reg Byte
     | DrawSprite Reg Reg Nybble
-    | SkipKey SkipKey Reg
+    | SkipKeyIs Bool Reg
     | GetTimer Reg
     | WaitKey Reg
     | SetTimer Reg
@@ -65,19 +56,19 @@ decodeInstr hi lo = case codes of
     (0x0,   _,   _,   _) -> Sys addr
     (0x1,   _,   _,   _) -> Jump addr
     (0x2,   _,   _,   _) -> Call addr
-    (0x3,   x,   _,   _) -> SkipCmpImm SkipIfEq x imm
-    (0x4,   x,   _,   _) -> SkipCmpImm SkipIfNEq x imm
-    (0x5,   x,   y, 0x0) -> SkipCmpReg SkipIfEq x y
+    (0x3,   x,   _,   _) -> SkipEqImmIs True x imm
+    (0x4,   x,   _,   _) -> SkipEqImmIs False x imm
+    (0x5,   x,   y, 0x0) -> SkipEqRegIs True x y
     (0x6,   x,   _,   _) -> PutImm x imm
     (0x7,   x,   _,   _) -> AddImm x imm
     (0x8,   x,   y, fun) -> ALU (decodeFun fun) x y
-    (0x9,   x,   y, 0x0) -> SkipCmpReg SkipIfNEq x y
+    (0x9,   x,   y, 0x0) -> SkipEqRegIs False x y
     (0xa,   _,   _,   _) -> SetPtr addr
     (0xb,   _,   _,   _) -> JumpPlusR0 addr
     (0xc,   x,   _,   _) -> Randomize x imm
     (0xd,   x,   y,   n) -> DrawSprite x y n
-    (0xe,   x, 0x9, 0xe) -> SkipKey SkipIfPressed x
-    (0xe,   x, 0xa, 0x1) -> SkipKey SkipIfNotPressed x
+    (0xe,   x, 0x9, 0xe) -> SkipKeyIs True x
+    (0xe,   x, 0xa, 0x1) -> SkipKeyIs False x
     (0xf,   x, 0x0, 0x7) -> GetTimer x
     (0xf,   x, 0x0, 0xa) -> WaitKey x
     (0xf,   x, 0x1, 0x5) -> SetTimer x

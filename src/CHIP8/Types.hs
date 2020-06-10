@@ -10,11 +10,12 @@ type Byte = Word8
 type Addr = Unsigned 12
 type Reg = Nybble
 
+type VidX = Unsigned 6
+type VidY = Unsigned 5
+type VidRow = Unsigned 64
+
 type Key = Index 16
 -- type KeypadState = Vec 16 Bool
-
--- type VidX = Unsigned 6
--- type VidY = Unsigned 5
 
 nybbles :: Byte -> (Nybble, Nybble)
 nybbles = bitCoerce

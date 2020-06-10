@@ -15,9 +15,13 @@ dependencies:
   - retroclash-sim
 
   - clash-shake
+
   - lens
   - mtl
   - transformers
+  - barbies ^>= 2.0.1
+  - barbies-th
+
   # - sdl2
   # - array
   # - extra
