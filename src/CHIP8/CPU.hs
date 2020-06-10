@@ -23,6 +23,8 @@ import Control.Monad.State
 import Control.Lens hiding (Index, assign)
 import Data.Maybe
 
+import Debug.Trace
+
 declareBareB [d|
   data CPUIn = CPUIn
       { memRead :: Byte
@@ -86,15 +88,26 @@ defaultOut CPUState{..} = CPUOut
 
 type CPU = CPUM CPUState CPUOut
 
-cpu :: Pure CPUIn -> CPU ()
-cpu CPUIn{..} = do
-    CPUState{..} <- get
+-- cpu :: (HiddenClockResetEnable dom) => Signals dom CPUIn -> Signals dom CPUOut
+-- cpu = mealyCPU initState defaultOutput step
+
+cpuMachine :: Pure CPUIn -> State CPUState (Pure CPUOut)
+cpuMachine = runCPU defaultOut . step
+
+step :: Pure CPUIn -> CPU ()
+step CPUIn{..} = do
     randomState %= lfsr
     when tick $ timer %= fromMaybe 0 . predIdx
 
+    -- do
+    --     CPUState{..} <- get
+    --     trace (show (_pc, memRead)) $ return ()
+
     use phase >>= \case
         Init -> phase .= Fetch
-        Fetch -> phase .= Exec memRead
+        Fetch -> do
+            pc += 1
+            phase .= Exec memRead
         ClearFB y -> clearScreen y
         WriteBCD x i -> case succIdx i of
             Nothing -> phase .= Fetch
@@ -102,9 +115,10 @@ cpu CPUIn{..} = do
                 addr <- uses ptr (+ fromIntegral i')
                 writeMem addr (toBCDRom x !! i')
                 phase .= WriteBCD x i'
-        -- WaitKeyPress reg -> for_ keyEvent $ \(pressed, key) -> when (not pressed) $ do
-        --     setReg reg $ fromIntegral key
-        --     goto $ Fetch
+        WaitKeyPress reg -> return ()
+-- for_ keyEvent $ \(pressed, key) -> when (not pressed) $ do
+--             setReg reg $ fromIntegral key
+--             goto $ Fetch
         StoreReg reg -> case predIdx reg of
             Nothing -> phase .= Fetch
             Just reg' -> storeReg reg'
@@ -120,18 +134,22 @@ cpu CPUIn{..} = do
            addr <- uses ptr (+ fromIntegral row)
            vidAddr .:= y + fromIntegral row
            memAddr .:= addr
+           traceShow (x, y, row, addr) $ return ()
            phase .= DrawWrite x y row
         DrawWrite x y row -> do
            let bg = vidRead
-               sprite = bitCoerce (bitCoerce memRead ++ repeat low) `shiftR` fromIntegral x
-               pattern = bg `xor` sprite
-               collision = (bg .&. sprite) /= 0
+               sprite = bitCoerce memRead ++ repeat low
+               sprite' = bitCoerce sprite `shiftR` fromIntegral x
+               pattern = bg `xor` sprite'
+               collision = (bg .&. sprite') /= 0
            when collision $ setFlag high
            writeVid (y + fromIntegral row) pattern
-           phase .= maybe Fetch (DrawWrite x y) (predIdx row)
+           phase .= maybe Fetch (DrawRead x y) (predIdx row)
         Exec hi -> do
             let lo = memRead
-            case decodeInstr hi lo of
+            pc += 1
+            phase .= Fetch
+            case traceShowId $ decodeInstr hi lo of
                 ClearScreen -> do
                     clearScreen 0
                 Ret -> do
@@ -178,10 +196,11 @@ cpu CPUIn{..} = do
                     -- the remaining height being 0 as a stopping
                     -- condition.
                     phase .= DrawRead x y height'
-                -- SkipKeyIs b regX -> do
-                --     key <- fromIntegral <$> getReg regX
-                --     let isPressed = keyState !! key
-                --     when (isPressed == b) skip
+                SkipKeyIs b regX -> do
+                    key <- fromIntegral <$> getReg regX
+                    -- let isPressed = keyState !! key
+                    let isPressed = False
+                    when (isPressed == b) skip
                 WaitKey regX -> phase .= WaitKeyPress regX
                 GetTimer regX -> do
                     setReg regX =<< use timer
@@ -195,7 +214,7 @@ cpu CPUIn{..} = do
                     ptr += fromIntegral x
                 LoadFont regX -> do
                     x <- getReg regX
-                    ptr .= toFont x
+                    ptr .= traceShowId (toFont x)
                 StoreBCD regX -> do
                     x <- getReg regX
                     addr <- use ptr

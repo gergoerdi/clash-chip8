@@ -12,7 +12,7 @@ type Reg = Nybble
 
 type VidX = Unsigned 6
 type VidY = Unsigned 5
-type VidRow = Unsigned 64
+type VidRow = Word64
 
 type Key = Index 16
 -- type KeypadState = Vec 16 Bool
