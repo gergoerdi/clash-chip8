@@ -31,7 +31,6 @@ declareBareB [d|
       { memRead :: Byte
       , vidRead :: VidRow
       , keyState :: KeypadState
-      , keyEvent :: Maybe (Bool, Key)
       , tick :: Bool
       } |]
 
@@ -53,7 +52,7 @@ data Phase
     | ClearFB VidY
     | DrawRead VidX VidY Nybble
     | DrawWrite VidX VidY Nybble
-    | WaitKeyPress Reg
+    | WaitKeyRelease Reg KeypadState
     | WriteBCD Byte (Index 3)
     deriving (Show, Generic, NFDataX)
 
@@ -89,9 +88,6 @@ defaultOut CPUState{..} = CPUOut
 
 type CPU = CPUM CPUState CPUOut
 
--- cpu :: (HiddenClockResetEnable dom) => Signals dom CPUIn -> Signals dom CPUOut
--- cpu = mealyCPU initState defaultOutput step
-
 cpuMachine :: Pure CPUIn -> State CPUState (Pure CPUOut)
 cpuMachine = runCPU defaultOut . step
 
@@ -112,9 +108,13 @@ step CPUIn{..} = do
                 addr <- uses ptr (+ fromIntegral i')
                 writeMem addr (toBCDRom x !! i')
                 phase .= WriteBCD x i'
-        WaitKeyPress reg -> for_ keyEvent $ \(pressed, key) -> when (not pressed) $ do
-            setReg reg $ fromIntegral key
-            phase .= Fetch
+        WaitKeyRelease reg prevState -> do
+            case keyRelease prevState keyState of
+                Just key -> do
+                    setReg reg $ fromIntegral key
+                    phase .= Fetch
+                Nothing -> do
+                    phase .= WaitKeyRelease reg keyState
         StoreReg reg -> case predIdx reg of
             Nothing -> phase .= Fetch
             Just reg' -> storeReg reg'
@@ -195,7 +195,7 @@ step CPUIn{..} = do
                     key <- fromIntegral <$> getReg regX
                     let isPressed = keyState !! key
                     when (isPressed == b) skip
-                WaitKey regX -> phase .= WaitKeyPress regX
+                WaitKey regX -> phase .= WaitKeyRelease regX keyState
                 GetTimer regX -> do
                     setReg regX =<< use timer
                 SetTimer regX -> do
@@ -238,13 +238,9 @@ step CPUIn{..} = do
         memAddr .:= addr
         memWrite .:= Just val
 
-    -- readMem addr = output $ #cpuOutMemAddr addr
-
     writeVid y val = do
         vidAddr .:= y
         vidWrite .:= Just val
---     writeFB xy val = output $ #cpuOutFBAddr xy <> #cpuOutFBWrite (Just val)
---     readFB xy = output $ #cpuOutFBAddr xy <> #cpuOutFBWrite Nothing
 
     popPC = do
        (pc', stack') <- pop <$> use stack
@@ -259,3 +255,6 @@ step CPUIn{..} = do
 
 toBCDRom :: Byte -> Vec 3 Byte
 toBCDRom = asyncRom $(listToVecTH $ fmap toBCD [minBound..maxBound])
+
+keyRelease :: KeypadState -> KeypadState -> Maybe Key
+keyRelease prev new = elemIndex True $ zipWith (\ before now -> before && not now) prev new

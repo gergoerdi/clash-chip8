@@ -28,15 +28,13 @@ world
     :: IOUArray Word16 Word8
     -> IOUArray Word8 Word64
     -> Vec (4 * 4) Bool
-    -> [(Bool, Key)]
     -> Bool
     -> Pure CPUOut
     -> IO (Pure CPUIn)
-world ram vid keyState keyEvent firstForFrame CPUOut{..} = do
+world ram vid keyState firstForFrame CPUOut{..} = do
     memRead <- readMem _memAddr
     vidRead <- readVid _vidAddr
     tick <- return firstForFrame
-    keyEvent <- return $ listToMaybe keyEvent
     keyState <- return keyState
 
     traverse_ (writeMem _memAddr) _memWrite
@@ -76,24 +74,17 @@ main = do
             { memRead = 0
             , vidRead = 0
             , tick = False
+            , keyState = repeat False
             }
     flip evalStateT (initInput, initState) $
       withMainWindow videoParams $ \events keyDown -> do
         guard $ not $ keyDown ScancodeEscape
 
         let keyState = fmap keyDown scanMap
-            keyEvents =
-                [ (keyboardEventKeyMotion == SDL.Pressed, key)
-                | KeyboardEvent KeyboardEventData{..} <- fmap eventPayload events
-                , let scanCode = keysymScancode keyboardEventKeysym
-                , Just key <- pure $ elemIndex scanCode scanMap
-                ]
-
-        let sim firstForFrame = do
+            sim firstForFrame = do
                 (inp, s) <- get
                 let (out, s') = runState (cpuMachine inp) s
-                -- TODO: feed events once every 100 cycles or somesuch
-                inp' <- liftIO $ world ram vid keyState (if firstForFrame then keyEvents else []) firstForFrame out
+                inp' <- liftIO $ world ram vid keyState firstForFrame out
                 put (inp', s')
 
         sim True
@@ -102,7 +93,7 @@ main = do
         vidArr <- liftIO $ freeze vid
         return $ rasterizePattern @64 @32 $ \x y ->
           let fg = (0xe7, 0xc2, 0x51)
-              bg = (0x20, 0x20, 0x20)
+              bg = (0x50, 0x50, 0x50)
               row = vidArr ! fromIntegral y
           in if testBit row (fromIntegral (maxBound - x)) then fg else bg
   where
