@@ -1,6 +1,9 @@
 {-# LANGUAGE NumericUnderscores, RecordWildCards #-}
 module CHIP8 where
 
+import CHIP8.CPU
+import CHIP8.LogicBoard
+
 import Clash.Prelude
 import Clash.Annotations.TH
 import RetroClash.Utils

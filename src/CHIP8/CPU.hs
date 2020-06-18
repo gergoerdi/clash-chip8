@@ -91,6 +91,9 @@ type CPU = CPUM CPUState CPUOut
 cpuMachine :: Pure CPUIn -> State CPUState (Pure CPUOut)
 cpuMachine = runCPU defaultOut . step
 
+cpu :: (HiddenClockResetEnable dom) => Signals dom CPUIn -> Signals dom CPUOut
+cpu = mealyCPU initState defaultOut step
+
 step :: Pure CPUIn -> CPU ()
 step CPUIn{..} = do
     randomState %= lfsr
