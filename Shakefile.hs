@@ -33,9 +33,14 @@ main = clashShake clashProject $ do
     ClashProject{..} <- ask
     let synDir = buildDir </> clashDir
 
-    kit@ClashKit{..} <- clashRules Verilog "src" $ return ()
+    kit@ClashKit{..} <- clashRules Verilog "src" $ do
+        need [buildDir </> "image.bin"]
+
     -- xilinxISE kit papilioPro "target/papilio-pro" "papilio-pro"
     -- xilinxISE kit papilioOne "target/papilio-one" "papilio-one"
     xilinxVivado kit nexysA750T "target/nexys-a7-50t" "nexys-a7-50t"
 
-    return ()
+    lift $ do
+      buildDir </> "image.bin" %> \out -> do
+          imageFile <- fromMaybe "roms/hidden.ch8" <$> getConfig "IMAGE"
+          binImage (Just 0x1000) imageFile out
