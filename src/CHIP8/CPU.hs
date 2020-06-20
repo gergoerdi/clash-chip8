@@ -105,12 +105,10 @@ step CPUIn{..} = do
             pc += 1
             phase .= Exec memRead
         ClearFB y -> clearScreen y
-        WriteBCD x i -> case succIdx i of
-            Nothing -> phase .= Fetch
-            Just i' -> do
-                addr <- uses ptr (+ fromIntegral i')
-                writeMem addr (toBCDRom x !! i')
-                phase .= WriteBCD x i'
+        WriteBCD x i -> do
+            addr <- uses ptr (+ fromIntegral i)
+            writeMem addr (toBCDRom x !! i)
+            phase .= maybe Fetch (WriteBCD x) (succIdx i)
         WaitKeyRelease reg prevState -> do
             case keyRelease prevState keyState of
                 Just key -> do
@@ -214,8 +212,6 @@ step CPUIn{..} = do
                     ptr .= toFont x
                 StoreBCD regX -> do
                     x <- getReg regX
-                    addr <- use ptr
-                    writeMem addr $ toBCDRom x !! 0
                     phase .= WriteBCD x 0
                 StoreRegs regMax -> storeReg regMax
                 LoadRegs regMax -> do
