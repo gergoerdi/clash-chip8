@@ -23,15 +23,15 @@ video write = (matchDelay rgb False frameEnd, delayVGA vgaSync rgb)
     VGADriver{..} = vgaDriver vga640x480at60
     frameEnd = isFalling False (isJust <$> vgaY)
 
-    vgaX' = scale (SNat @10) vgaX
-    vgaY' = scale (SNat @10) . center @320 $ vgaY
+    vgaX' = fromSignal $ scale (SNat @10) vgaX
+    vgaY' = fromSignal $ scale (SNat @10) . center @320 $ vgaY
 
     rgb = maybe border monochrome <$> pixel
 
-    row = delayedBlockRam1 ClearOnReset (SNat @32) 0x00 (fromMaybe 0 <$> fromSignal vgaY') (fmap (first bitCoerce) <$> fromSignal write)
+    row = delayedBlockRam1 ClearOnReset (SNat @32) 0x00 (fromMaybe 0 <$> vgaY') (fmap (first bitCoerce) <$> fromSignal write)
     pixel = do
-        row <- row
-        x <- delayI Nothing $ fromSignal vgaX'
-        pure $ (row!) <$> x
+        row <- enable (delayI False $ isJust <$> vgaY') row
+        x <- delayI Nothing vgaX'
+        pure $ (!) <$> row <*> x
 
     border = (0x30, 0x30, 0x50)
