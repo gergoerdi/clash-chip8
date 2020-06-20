@@ -54,7 +54,7 @@ logicBoard programFile tick keyState = vidOut
                Default (RAM ram)
 
     fontROM = romPow2 hexDigits . fmap fromIntegral
-    ram addr wr = unpack <$> blockRamFile (SNat @(2 ^ 12 - 0x200)) programFile addr wr'
+    ram addr wr = unpack <$> blockRamFile (SNat @(0x1000 - 0x200)) programFile addr wr'
       where
         wr' = fmap (second pack) <$> wr
 

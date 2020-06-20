@@ -43,4 +43,4 @@ main = clashShake clashProject $ do
     lift $ do
       buildDir </> "image.bin" %> \out -> do
           imageFile <- fromMaybe "roms/hidden.ch8" <$> getConfig "IMAGE"
-          binImage (Just 0x1000) imageFile out
+          binImage (Just $ 0x1000 - 0x0200) imageFile out
