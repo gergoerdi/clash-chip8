@@ -2,6 +2,7 @@ resolver: clash-HEAD.yaml
 
 extra-deps:
   - clash-shake
+  - clashilator
   - retroclash-lib
   - retroclash-sim
 

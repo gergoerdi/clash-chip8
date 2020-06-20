@@ -2,6 +2,12 @@ name: clash-chip8
 version: 0.1.0
 category: hardware, emulator
 
+custom-setup:
+  dependencies:
+    - base
+    - Cabal
+    - clashilator
+
 dependencies:
   - base
   - clash-prelude
@@ -25,6 +31,7 @@ dependencies:
   - bytestring
   - sdl2
   - temporary
+  - extra
 
 # Anything that Clash uses by default should go here
 default-extensions:
@@ -64,9 +71,26 @@ ghc-options:
 source-dirs:
   - src
 
+flags:
+  verilator:
+    manual: True
+    default: False
+
 executables:
   chip8:
     main: simulator.hs
 
   chip8-board:
     main: simulator-board.hs
+
+  chip8-vga:
+    main: simulator-vga.hs
+    when:
+    - condition: flag(verilator)
+      then:
+        verbatim:
+          x-clashilator-top-is: CHIP8.VideoTestBench
+          x-clashilator-clock: CLK_25MHZ
+          x-clashilator-clash-flags: -fclash-inline-limit=400
+      else:
+        buildable: false
