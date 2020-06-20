@@ -53,7 +53,9 @@ logicBoard programFile tick keyState = vidOut
         mems = UpTo 0x0200 (ROM fontROM) $
                Default (RAM ram)
 
-    fontROM = romPow2 hexDigits . fmap fromIntegral
+    -- Use TH to force `hexDigits` into normal form, otherwise Clash synthesis fails
+    fontROM = romPow2 $(lift hexDigits) . fmap fromIntegral
+
     ram addr wr = unpack <$> blockRamFile (SNat @(0x1000 - 0x200)) programFile addr wr'
       where
         wr' = fmap (second pack) <$> wr
