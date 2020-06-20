@@ -21,7 +21,7 @@ clashProject = ClashProject
     , clashTopName = "topEntity"
     , topName = "Top"
     , clashFlags =
-        [ "-iretroclash-lib/src"
+        [ "-i../retroclash-lib/src"
         , "-Wno-partial-type-signatures"
         ]
     , buildDir = "_build"
