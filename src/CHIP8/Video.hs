@@ -5,6 +5,8 @@ import Clash.Prelude
 import RetroClash.VGA
 import RetroClash.Video
 import RetroClash.Delayed
+import RetroClash.Utils
+
 import Data.Maybe
 import Control.Arrow (first)
 import CHIP8.Types
@@ -33,7 +35,3 @@ video write = (matchDelay rgb False frameEnd, delayVGA vgaSync rgb)
         pure $ (row!) <$> x
 
     border = (0x30, 0x30, 0x50)
-
-monochrome :: (Bounded a) => Bit -> a
-monochrome 0 = minBound
-monochrome 1 = maxBound
