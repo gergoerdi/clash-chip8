@@ -24,26 +24,27 @@ video write = (matchDelay rgb False frameEnd, delayVGA vgaSync rgb)
     VGADriver{..} = vgaDriver vga640x480at60
     frameEnd = isFalling False (isJust <$> vgaY)
 
-    vgaX' = scale (SNat @9) . center @(9 * 64) $ vgaX
-    vgaY' = scale (SNat @9) . center @(9 * 32) $ vgaY
+    vgaX' = fromSignal $ scale (SNat @9) . center @(9 * 64) $ vgaX
+    vgaY' = fromSignal $ scale (SNat @9) . center @(9 * 32) $ vgaY
 
     rgb = maybe border palette <$> pixel
 
-    lineStart = isRising False (isJust <$> vgaX')
-    newX = vgaX' ./=. register Nothing vgaX'
+    lineStart = isRisingD False $ (isJust <$> vgaX')
+    newX = changedD Nothing vgaX'
+    visible = isJust <$> vgaX' .&&. isJust <$> vgaY'
 
-    addr = join <$> enable lineStart vgaY'
-    load = blockRam1 ClearOnReset (SNat @32) 0x00 (fromMaybe 0 <$> addr) (fmap (first bitCoerce) <$> write)
+    addr = mux lineStart vgaY' (pure Nothing)
+    write' = fmap (first bitCoerce) <$> fromSignal write
+    load = delayedBlockRam1 ClearOnReset (SNat @32) 0x00 (fromMaybe 0 <$> addr) write'
 
-    row = register 0 $
-          mux (register False $ isJust <$> addr) load $
-          mux (register False newX) ((`shiftL` 1) <$> row) $
-          row
-    pixel = unsafeFromSignal @_ @_ @2 $ enable (register False . register False $ isJust <$> vgaX' .&&. isJust <$> vgaY') $
-            msb <$> row
+    row = delayedRegister 0 $ \row ->
+        mux (delayI False $ isJust <$> addr) load $
+        mux (delayI False newX) ((`shiftL` 1) <$> row) $
+        row
+    pixel = enable (delayI False visible) $ msb <$> row
 
     border = (0x30, 0x30, 0x50)
 
     palette :: Bit -> (Unsigned 8, Unsigned 8, Unsigned 8)
-    palette 0 = minBound
-    palette 1 = maxBound
+    palette 0 = (0x00, 0x00, 0x00)
+    palette 1 = (0xff, 0xff, 0xff)
