@@ -30,16 +30,17 @@ video write = (matchDelay rgb False frameEnd, delayVGA vgaSync rgb)
     rgb = maybe border palette <$> pixel
 
     lineStart = isRisingD False $ (isJust <$> vgaX')
+    newY = changedD Nothing vgaY'
     newX = changedD Nothing vgaX'
     visible = isJust <$> vgaX' .&&. isJust <$> vgaY'
 
-    addr = mux lineStart vgaY' (pure Nothing)
+    addr = mux newY vgaY' (pure Nothing)
     write' = fmap (first bitCoerce) <$> fromSignal write
     load = delayedBlockRam1 ClearOnReset (SNat @32) 0x00 (fromMaybe 0 <$> addr) write'
 
     row = delayedRegister 0 $ \row ->
         mux (delayI False $ isJust <$> addr) load $
-        mux (delayI False newX) ((`shiftL` 1) <$> row) $
+        mux (delayI False $ not <$> lineStart .&&. newX) ((`rotateL` 1) <$> row) $
         row
     pixel = enable (delayI False visible) $ msb <$> row
 
