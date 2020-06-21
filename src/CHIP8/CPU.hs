@@ -107,7 +107,7 @@ step CPUIn{..} = do
         ClearFB y -> clearScreen y
         WriteBCD x i -> do
             addr <- uses ptr (+ fromIntegral i)
-            writeMem addr (toBCDRom x !! i)
+            writeMem addr . fromIntegral $ toBCD x !! i
             phase .= maybe Fetch (WriteBCD x) (succIdx i)
         WaitKeyRelease reg prevState -> do
             case keyRelease prevState keyState of
@@ -251,9 +251,6 @@ step CPUIn{..} = do
        stack %= push pc
 
     skip = pc += 2
-
-toBCDRom :: Byte -> Vec 3 Byte
-toBCDRom = asyncRom $(listToVecTH $ fmap toBCD [minBound..maxBound])
 
 keyRelease :: KeypadState -> KeypadState -> Maybe Key
 keyRelease prev new = elemIndex True $ zipWith (\ before now -> before && not now) prev new

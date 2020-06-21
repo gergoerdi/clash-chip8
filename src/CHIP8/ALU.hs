@@ -23,13 +23,6 @@ alu fun = case fun of
     carry :: (Unsigned 8 -> Unsigned 8 -> Unsigned 9) -> (Byte -> Byte -> (Maybe Bit, Byte))
     carry f x y = let (c, z) = bitCoerce (f (bitCoerce x) (bitCoerce y)) in (Just c, z)
 
-toBCD :: Byte -> Vec 3 Byte
-toBCD x =
-    x `div` 100 :>
-    (x `div` 10) `mod` 10 :>
-    x `mod` 10 :>
-    Nil
-
 toFont :: Byte -> Addr
 toFont x = extend lo `shiftL` 3
   where
@@ -42,3 +35,21 @@ lfsr s = (s `rotateR` 1) `xor` b4
   where
     b = fromIntegral $ complement . lsb $ s
     b4 = b `shiftL` 4
+
+toBCD :: Byte -> Vec 3 (Unsigned 4)
+toBCD x = extend x100 :> x10 :> x1 :> Nil
+  where
+    coords :: Unsigned (2 + 4 + 4 + 8) -> (Unsigned 2, Unsigned 4, Unsigned 4, Unsigned 8)
+    coords = bitCoerce
+
+    (x100, x10, x1, _) = coords $ last $ iterate d8 (shift . add3) . shift $ buf0
+      where
+        buf0 = fromIntegral x
+
+        shift = (`shiftL` 1)
+
+        add3 x | x1 >= 5 = x + 0x0300
+               | x10 >= 5 = x + 0x3000
+               | otherwise = x
+          where
+            (_, x10, x1, _) = coords x
