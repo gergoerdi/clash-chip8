@@ -116,9 +116,10 @@ step CPUIn{..} = do
                     phase .= Fetch
                 Nothing -> do
                     phase .= WaitKeyRelease reg keyState
-        StoreReg reg -> case predIdx reg of
-            Nothing -> phase .= Fetch
-            Just reg' -> storeReg reg'
+        StoreReg reg -> do
+            addr <- uses ptr (+ fromIntegral reg)
+            writeMem addr =<< getReg reg
+            phase .= maybe Init StoreReg (predIdx reg)
         LoadReg reg -> do
             setReg reg memRead
             case predIdx reg of
@@ -213,7 +214,8 @@ step CPUIn{..} = do
                 StoreBCD regX -> do
                     x <- getReg regX
                     phase .= WriteBCD x 0
-                StoreRegs regMax -> storeReg regMax
+                StoreRegs regMax -> do
+                    phase .= StoreReg regMax
                 LoadRegs regMax -> do
                     addr <- uses ptr (+ fromIntegral regMax)
                     memAddr .:= addr
@@ -223,11 +225,6 @@ step CPUIn{..} = do
     clearScreen y = do
         writeVid y 0
         phase .= maybe Fetch ClearFB (succIdx y)
-
-    storeReg reg = do
-        addr <- uses ptr (+ fromIntegral reg)
-        writeMem addr =<< getReg reg
-        phase .= StoreReg reg
 
     setReg reg val = registers %= replace reg val
     getReg reg = uses registers (!! reg)
