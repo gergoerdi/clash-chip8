@@ -14,8 +14,8 @@ alu fun = case fun of
     Add -> carry add
     Subtract -> carry sub
     SubtractFlip -> carry (flip sub)
-    ShiftRight -> carry (\x _ -> extend x `rotateR` 1)
-    ShiftLeft -> carry (\x _ -> extend x `rotateL` 1)
+    ShiftRight -> carry (\_ y -> extend y `rotateR` 1)
+    ShiftLeft -> carry (\_ y -> extend y `rotateL` 1)
   where
     noCarry :: (Byte -> Byte -> Byte) -> (Byte -> Byte -> (Maybe Bit, Byte))
     noCarry f x y = (Nothing, f x y)
