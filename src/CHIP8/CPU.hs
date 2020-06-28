@@ -47,12 +47,12 @@ data Phase
     = Init
     | Fetch
     | Exec Byte
-    | StoreReg Reg
-    | LoadReg Reg
     | ClearFB VidY
     | DrawRead VidX VidY Nybble
     | DrawWrite VidX VidY Nybble
     | WaitKeyRelease Reg KeypadState
+    | WriteRegs Reg
+    | ReadRegs Reg
     | WriteBCD Byte (Index 3)
     deriving (Show, Generic, NFDataX)
 
@@ -105,29 +105,6 @@ step CPUIn{..} = do
             pc += 1
             phase .= Exec memRead
         ClearFB y -> clearScreen y
-        WriteBCD x i -> do
-            addr <- uses ptr (+ fromIntegral i)
-            writeMem addr . fromIntegral $ toBCD x !! i
-            phase .= maybe Fetch (WriteBCD x) (succIdx i)
-        WaitKeyRelease reg prevState -> do
-            case keyRelease prevState keyState of
-                Just key -> do
-                    setReg reg $ fromIntegral key
-                    phase .= Fetch
-                Nothing -> do
-                    phase .= WaitKeyRelease reg keyState
-        StoreReg reg -> do
-            addr <- uses ptr (+ fromIntegral reg)
-            writeMem addr =<< getReg reg
-            phase .= maybe Init StoreReg (predIdx reg)
-        LoadReg reg -> do
-            setReg reg memRead
-            case predIdx reg of
-                Nothing -> phase .= Fetch
-                Just reg' -> do
-                    addr <- uses ptr (+ fromIntegral reg')
-                    memAddr .:= addr
-                    phase .= LoadReg reg'
         DrawRead x y row -> do
            addr <- uses ptr (+ fromIntegral row)
            vidAddr .:= y + fromIntegral row
@@ -142,6 +119,29 @@ step CPUIn{..} = do
            when collision $ setFlag high
            writeVid (y + fromIntegral row) pattern
            phase .= maybe Fetch (DrawRead x y) (predIdx row)
+        WaitKeyRelease reg prevState -> do
+            case keyRelease prevState keyState of
+                Just key -> do
+                    setReg reg $ fromIntegral key
+                    phase .= Fetch
+                Nothing -> do
+                    phase .= WaitKeyRelease reg keyState
+        WriteBCD x i -> do
+            addr <- uses ptr (+ fromIntegral i)
+            writeMem addr . fromIntegral $ toBCD x !! i
+            phase .= maybe Init (WriteBCD x) (succIdx i)
+        WriteRegs reg -> do
+            addr <- uses ptr (+ fromIntegral reg)
+            writeMem addr =<< getReg reg
+            phase .= maybe Init WriteRegs (predIdx reg)
+        ReadRegs reg -> do
+            setReg reg memRead
+            case predIdx reg of
+                Nothing -> phase .= Fetch
+                Just reg' -> do
+                    addr <- uses ptr (+ fromIntegral reg')
+                    memAddr .:= addr
+                    phase .= ReadRegs reg'
         Exec hi -> do
             let lo = memRead
             pc += 1
@@ -165,20 +165,20 @@ step CPUIn{..} = do
                     x <- getReg regX
                     y <- getReg regY
                     when ((x == y) == b) skip
-                PutImm regX imm -> do
+                LoadImm regX imm -> do
                     setReg regX imm
                 AddImm regX imm -> do
                     x <- getReg regX
                     setReg regX (x + imm)
-                ALU fun regX regY -> do
+                Arith fun regX regY -> do
                     x <- getReg regX
                     y <- getReg regY
                     let (flag, x') = alu fun x y
                     setReg regX x'
                     maybe (return ()) setFlag flag
-                SetPtr addr -> do
+                LoadPtr addr -> do
                     ptr .= addr
-                JumpPlusR0 addr -> do
+                JumpPlusV0 addr -> do
                     offset <- getReg 0
                     pc .= addr + fromIntegral offset
                 Randomize regX mask -> do
@@ -200,26 +200,26 @@ step CPUIn{..} = do
                 WaitKey regX -> phase .= WaitKeyRelease regX keyState
                 GetTimer regX -> do
                     setReg regX =<< use timer
-                SetTimer regX -> do
+                LoadTimer regX -> do
                     val <- getReg regX
                     timer .= val
-                SetSound regX -> do
+                LoadSound regX -> do
                     return () -- TODO
                 AddPtr regX -> do
                     x <- getReg regX
                     ptr += fromIntegral x
-                LoadFont regX -> do
+                LoadHex regX -> do
                     x <- getReg regX
-                    ptr .= toFont x
+                    ptr .= toHex x
                 StoreBCD regX -> do
                     x <- getReg regX
                     phase .= WriteBCD x 0
                 StoreRegs regMax -> do
-                    phase .= StoreReg regMax
+                    phase .= WriteRegs regMax
                 LoadRegs regMax -> do
                     addr <- uses ptr (+ fromIntegral regMax)
                     memAddr .:= addr
-                    phase .= LoadReg regMax
+                    phase .= ReadRegs regMax
                 op -> fatal "Exec" op
   where
     clearScreen y = do

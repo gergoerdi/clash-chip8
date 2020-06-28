@@ -23,8 +23,8 @@ alu fun = case fun of
     carry :: (Unsigned 8 -> Unsigned 8 -> Unsigned 9) -> (Byte -> Byte -> (Maybe Bit, Byte))
     carry f x y = let (c, z) = bitCoerce (f (bitCoerce x) (bitCoerce y)) in (Just c, z)
 
-toFont :: Byte -> Addr
-toFont x = extend lo `shiftL` 3
+toHex :: Byte -> Addr
+toHex x = extend lo `shiftL` 3
   where
     (_, lo) = nybbles x
 
