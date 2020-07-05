@@ -24,9 +24,7 @@ alu fun = case fun of
     carry f x y = let (c, z) = bitCoerce (f (bitCoerce x) (bitCoerce y)) in (Just c, z)
 
 toHex :: Byte -> Addr
-toHex x = extend lo `shiftL` 3
-  where
-    (_, lo) = nybbles x
+toHex x = extend (fromIntegral x :: Nybble) `shiftL` 3
 
 -- | 9-bit maximal linear feedback shift register based on x^9 + x^5 + 1
 -- http://en.wikipedia.org/wiki/Linear_feedback_shift_register#Some_polynomials_for_maximal_LFSRs

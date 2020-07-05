@@ -16,9 +16,3 @@ type VidRow = Word64
 
 type Key = Index 16
 type KeypadState = Vec 16 Bool
-
-nybbles :: Byte -> (Nybble, Nybble)
-nybbles = bitCoerce
-
--- toAddr :: Nybble -> Nybble -> Nybble -> Addr
--- toAddr a1 a2 a3 = bitCoerce (a1, a2, a3)

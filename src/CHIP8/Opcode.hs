@@ -1,7 +1,6 @@
 module CHIP8.Opcode
     ( Instr(..), Fun(..)
     , decodeInstr
-    , fatal
     ) where
 
 import Clash.Prelude
@@ -50,7 +49,7 @@ data Fun
     deriving (Show)
 
 decodeInstr :: Byte -> Byte -> Instr
-decodeInstr hi lo = case codes of
+decodeInstr hi lo = case nybbles of
     (0x0, 0x0, 0xe, 0x0) -> ClearScreen
     (0x0, 0x0, 0xe, 0xe) -> Ret
     (0x0,   _,   _,   _) -> Sys addr
@@ -78,12 +77,11 @@ decodeInstr hi lo = case codes of
     (0xf,   x, 0x3, 0x3) -> StoreBCD x
     (0xf,   x, 0x5, 0x5) -> StoreRegs x
     (0xf,   x, 0x6, 0x5) -> LoadRegs x
-    _                    -> errorX $ "Unknown opcode: " <>
-                            printf "%04x" (bitCoerce codes :: Word16)
+    _                    -> errorX $ printf "Unknown opcode: %02x %02x" hi lo
   where
-    (n1, n2) = nybbles hi
-    (n3, n4) = nybbles lo
-    codes = (n1, n2, n3, n4)
+    (n1, n2) = bitCoerce hi :: (Nybble, Nybble)
+    (n3, n4) = bitCoerce lo :: (Nybble, Nybble)
+    nybbles = (n1, n2, n3, n4)
     addr = bitCoerce (n2, n3, n4)
     imm = lo
 
@@ -97,7 +95,4 @@ decodeFun 0x5 = Subtract
 decodeFun 0x6 = ShiftRight
 decodeFun 0x7 = SubtractFlip
 decodeFun 0xe = ShiftLeft
-decodeFun n = fatal "Unknown arithmetic function" n
-
-fatal :: (Show a) => String -> a -> b
-fatal s x = errorX $ s <> ": " <> show x
+decodeFun n = errorX $ printf "Unknown arithmetic function: %x" (fromIntegral n :: Byte)

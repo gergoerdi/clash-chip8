@@ -23,8 +23,10 @@ import Control.Monad.State
 import Control.Lens hiding (Index, assign)
 import Data.Foldable (for_)
 import Data.Maybe
+import Data.Word
 
 import Debug.Trace
+import Text.Printf
 
 declareBareB [d|
   data CPUIn = CPUIn
@@ -156,8 +158,8 @@ step CPUIn{..} = do
                 Call addr -> do
                     pushPC
                     pc .= addr
-                -- Sys n -> do
-                --     errorX $ unwords ["Unimplemented: SYS", show n]
+                Sys n -> do
+                    errorX $ printf "Unimplemented: SYS %04x" (fromIntegral n :: Word16)
                 SkipEqImmIs b regX imm -> do
                     x <- getReg regX
                     when ((x == imm) == b) skip
@@ -220,7 +222,6 @@ step CPUIn{..} = do
                     addr <- uses ptr (+ fromIntegral regMax)
                     memAddr .:= addr
                     phase .= ReadRegs regMax
-                op -> fatal "Exec" op
   where
     clearScreen y = do
         writeVid y 0
