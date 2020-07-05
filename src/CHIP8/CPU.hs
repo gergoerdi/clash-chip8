@@ -190,11 +190,12 @@ step CPUIn{..} = do
                     x <- fromIntegral <$> getReg regX
                     y <- fromIntegral <$> getReg regY
                     let height' = if height == 0 then 15 else height - 1
+                        height'' = truncateB $ satAdd SatBound y (extend height') - y
                     setFlag low
                     -- We draw from bottom to top. This allows using
                     -- the remaining height being 0 as a stopping
                     -- condition.
-                    phase .= DrawRead x y height'
+                    phase .= DrawRead x y height''
                 SkipKeyIs b regX -> do
                     key <- fromIntegral <$> getReg regX
                     let isPressed = keyState !! key
