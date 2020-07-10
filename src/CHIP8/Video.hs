@@ -38,13 +38,14 @@ video write = (frameEnd, delayVGA vgaSync rgb)
     pixel = enable (delayI False visible) $ msb <$> row
     visible = isJust <$> vgaX' .&&. isJust <$> vgaY'
 
-    address = bitCoerce <$> mux lineStart vgaY' (pure Nothing)
+    address = bitCoerce <$> mux newY vgaY' (pure Nothing)
     load = delayedRam (blockRam1 ClearOnReset (SNat @32) 0) (fromMaybe 0 <$> address) (fromSignal write)
 
     lineStart = liftD (isRising False) $ (isJust <$> vgaX')
-    newX = liftD (changed Nothing) vgaX'
+    newY = liftD (changed Nothing) vgaY'
+    newX = visible .&&. liftD (changed Nothing) vgaX'
 
     row = delayedRegister 0 $ \row ->
         mux (delayI False $ isJust <$> address) load $
-        mux (delayI False newX) ((`shiftL` 1) <$> row) $
+        mux (delayI False newX) ((`rotateL` 1) <$> row) $
         row
