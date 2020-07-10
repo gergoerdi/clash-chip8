@@ -67,6 +67,7 @@ data CPUState = CPUState
     , _randomState :: Unsigned 9
     }
     deriving (Show, Generic, NFDataX)
+makeLenses ''CPUState
 
 initState :: CPUState
 initState = CPUState
@@ -78,7 +79,6 @@ initState = CPUState
     , _timer = 0
     , _randomState = 0
     }
-makeLenses ''CPUState
 
 defaultOut :: CPUState -> Pure CPUOut
 defaultOut CPUState{..} = CPUOut
