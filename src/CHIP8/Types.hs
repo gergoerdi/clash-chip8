@@ -14,5 +14,5 @@ type VidX = Unsigned 6
 type VidY = Unsigned 5
 type VidRow = Word64
 
-type Key = Index 16
+type Key = Nybble
 type KeypadState = Vec 16 Bool

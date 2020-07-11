@@ -197,7 +197,7 @@ step CPUIn{..} = do
                     -- condition.
                     phase .= DrawRead x y height''
                 SkipKeyIs b vx -> do
-                    key <- fromIntegral <$> getReg vx
+                    key <- toKey <$> getReg vx
                     let isPressed = keyState !! key
                     when (isPressed == b) skip
                 WaitKey vx -> phase .= WaitKeyRelease vx keyState
@@ -232,6 +232,11 @@ step CPUIn{..} = do
     getReg reg = uses registers (!! reg)
     setFlag = setReg 0xf . fromIntegral
 
+    toKey :: Byte -> Key
+    toKey x = bitCoerce key
+      where
+        (_, key) = bitCoerce x :: (Nybble, Nybble)
+
     writeMem addr val = do
         memAddr .:= addr
         memWrite .:= Just val
@@ -252,4 +257,4 @@ step CPUIn{..} = do
     skip = pc += 2
 
 keyRelease :: KeypadState -> KeypadState -> Maybe Key
-keyRelease prev new = elemIndex True $ zipWith (\ before now -> before && not now) prev new
+keyRelease prev new = fmap bitCoerce $ elemIndex True $ zipWith (\ before now -> before && not now) prev new
