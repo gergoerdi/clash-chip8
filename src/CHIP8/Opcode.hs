@@ -10,42 +10,43 @@ import Data.Word
 import Text.Printf
 
 data Instr
-    = Sys Addr
-    | Jump Addr
-    | JumpPlusV0 Addr
-    | Call Addr
-    | Ret
-    | SkipEqImmIs Bool Reg Byte
-    | SkipEqRegIs Bool Reg Reg
-    | LoadImm Reg Byte
-    | AddImm Reg Byte
-    | StoreRegs Reg
-    | LoadRegs Reg
-    | LoadPtr Addr
-    | AddPtr Reg
-    | Arith Fun Reg Reg
-    | Randomize Reg Byte
-    | StoreBCD Reg
-    | ClearScreen
-    | DrawSprite Reg Reg Nybble
-    | LoadHex Reg
-    | SkipKeyIs Bool Reg
-    | WaitKey Reg
-    | LoadTimer Reg
-    | GetTimer Reg
-    | LoadSound Reg
+    = Sys Addr                   -- SYS nnn
+    | Jump Addr                  -- JP nnn
+    | JumpPlusV0 Addr            -- JP nnn, V0
+    | Call Addr                  -- CALL nnn
+    | Ret                        -- RET
+    | SkipEqImmIs Bool Reg Byte  -- S[N]E Vx, nn
+    | SkipEqRegIs Bool Reg Reg   -- S[N]E Vx, Vy
+    | LoadImm Reg Byte           -- LD Vx, nn
+    | AddImm Reg Byte            -- ADD Vx, nn
+    | StoreRegs Reg              -- LD [I], Vx
+    | LoadRegs Reg               -- LD Vx, [I]
+    | LoadPtr Addr               -- LD I, nnn
+    | AddPtr Reg                 -- ADD I, Vx
+    | Arith Fun Reg Reg          -- MOV/ADD/SUB/SUBN/
+                                 -- AND/OR/XOR/SHL/SHR
+    | Randomize Reg Byte         -- RND Vx, nn
+    | StoreBCD Reg               -- BCD Vx
+    | ClearScreen                -- CLS
+    | DrawSprite Reg Reg Nybble  -- DRW Vx, Vy, nn
+    | LoadHex Reg                -- HEX Vx
+    | SkipKeyIs Bool Reg         -- SK[N]P Vx
+    | WaitKey Reg                -- LD Vx, K
+    | LoadTimer Reg              -- LD DT, Vx
+    | GetTimer Reg               -- LD Vx, DT
+    | LoadSound Reg              -- LD ST, Vx
     deriving (Show)
 
 data Fun
-    = Id
-    | Or
-    | And
-    | XOr
-    | Add
-    | Subtract
-    | ShiftRight
-    | SubtractFlip
-    | ShiftLeft
+    = Id           -- MOV
+    | Or           -- OR
+    | And          -- AND
+    | XOr          -- XOR
+    | Add          -- ADD
+    | Subtract     -- SUB
+    | ShiftRight   -- SHR
+    | SubtractNeg  -- SUBN
+    | ShiftLeft    -- SHL
     deriving (Show)
 
 decodeInstr :: Byte -> Byte -> Instr
@@ -93,6 +94,6 @@ decodeFun 0x3 = XOr
 decodeFun 0x4 = Add
 decodeFun 0x5 = Subtract
 decodeFun 0x6 = ShiftRight
-decodeFun 0x7 = SubtractFlip
+decodeFun 0x7 = SubtractNeg
 decodeFun 0xe = ShiftLeft
 decodeFun n = errorX $ printf "Unknown arithmetic function: %x" (fromIntegral n :: Byte)

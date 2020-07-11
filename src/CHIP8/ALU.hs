@@ -13,7 +13,7 @@ alu fun = case fun of
     XOr -> noCarry xor
     Add -> carry add
     Subtract -> carry sub
-    SubtractFlip -> carry (flip sub)
+    SubtractNeg -> carry (flip sub)
     ShiftRight -> carry (\_ y -> extend y `rotateR` 1)
     ShiftLeft -> carry (\_ y -> extend y `rotateL` 1)
   where

@@ -21,7 +21,7 @@ import Data.Monoid (Last(..))
 import Control.Monad.Writer
 import Control.Monad.State
 import Control.Lens hiding (Index, assign)
-import Data.Foldable (for_)
+import Data.Foldable (for_, traverse_)
 import Data.Maybe
 import Data.Word
 
@@ -160,35 +160,35 @@ step CPUIn{..} = do
                     pc .= addr
                 Sys n -> do
                     errorX $ printf "Unimplemented: SYS %04x" (fromIntegral n :: Word16)
-                SkipEqImmIs b regX imm -> do
-                    x <- getReg regX
+                SkipEqImmIs b vx imm -> do
+                    x <- getReg vx
                     when ((x == imm) == b) skip
-                SkipEqRegIs b regX regY -> do
-                    x <- getReg regX
-                    y <- getReg regY
+                SkipEqRegIs b vx vy -> do
+                    x <- getReg vx
+                    y <- getReg vy
                     when ((x == y) == b) skip
-                LoadImm regX imm -> do
-                    setReg regX imm
-                AddImm regX imm -> do
-                    x <- getReg regX
-                    setReg regX (x + imm)
-                Arith fun regX regY -> do
-                    x <- getReg regX
-                    y <- getReg regY
+                LoadImm vx imm -> do
+                    setReg vx imm
+                AddImm vx imm -> do
+                    x <- getReg vx
+                    setReg vx (x + imm)
+                Arith fun vx vy -> do
+                    x <- getReg vx
+                    y <- getReg vy
                     let (flag, x') = alu fun x y
-                    setReg regX x'
-                    maybe (return ()) setFlag flag
+                    setReg vx x'
+                    traverse_ setFlag flag
                 LoadPtr addr -> do
                     ptr .= addr
                 JumpPlusV0 addr -> do
                     offset <- getReg 0
                     pc .= addr + fromIntegral offset
-                Randomize regX mask -> do
+                Randomize vx mask -> do
                     rnd <- fromIntegral <$> use randomState
-                    setReg regX $ rnd .&. mask
-                DrawSprite regX regY height -> do
-                    x <- fromIntegral <$> getReg regX
-                    y <- fromIntegral <$> getReg regY
+                    setReg vx $ rnd .&. mask
+                DrawSprite vx vy height -> do
+                    x <- fromIntegral <$> getReg vx
+                    y <- fromIntegral <$> getReg vy
                     let height' = if height == 0 then 15 else height - 1
                         height'' = truncateB $ satAdd SatBound y (extend height') - y
                     setFlag low
@@ -196,26 +196,26 @@ step CPUIn{..} = do
                     -- the remaining height being 0 as a stopping
                     -- condition.
                     phase .= DrawRead x y height''
-                SkipKeyIs b regX -> do
-                    key <- fromIntegral <$> getReg regX
+                SkipKeyIs b vx -> do
+                    key <- fromIntegral <$> getReg vx
                     let isPressed = keyState !! key
                     when (isPressed == b) skip
-                WaitKey regX -> phase .= WaitKeyRelease regX keyState
-                GetTimer regX -> do
-                    setReg regX =<< use timer
-                LoadTimer regX -> do
-                    val <- getReg regX
+                WaitKey vx -> phase .= WaitKeyRelease vx keyState
+                GetTimer vx -> do
+                    setReg vx =<< use timer
+                LoadTimer vx -> do
+                    val <- getReg vx
                     timer .= val
-                LoadSound regX -> do
+                LoadSound vx -> do
                     return () -- TODO
-                AddPtr regX -> do
-                    x <- getReg regX
+                AddPtr vx -> do
+                    x <- getReg vx
                     ptr += fromIntegral x
-                LoadHex regX -> do
-                    x <- getReg regX
+                LoadHex vx -> do
+                    x <- getReg vx
                     ptr .= toHex x
-                StoreBCD regX -> do
-                    x <- getReg regX
+                StoreBCD vx -> do
+                    x <- getReg vx
                     phase .= WriteBCD x 0
                 StoreRegs regMax -> do
                     phase .= WriteRegs regMax
