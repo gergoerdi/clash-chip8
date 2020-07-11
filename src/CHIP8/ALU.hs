@@ -7,21 +7,23 @@ import Data.Word
 
 alu :: Fun -> Byte -> Byte -> (Maybe Bit, Byte)
 alu fun = case fun of
-    Id -> noCarry (\x y -> y)
-    Or -> noCarry (.|.)
-    And -> noCarry (.&.)
-    XOr -> noCarry xor
-    Add -> carry add
-    Subtract -> carry sub
-    SubtractNeg -> carry (flip sub)
-    ShiftRight -> carry (\_ y -> extend y `rotateR` 1)
-    ShiftLeft -> carry (\_ y -> extend y `rotateL` 1)
+    Mov -> noFlag (\x y -> y)
+    Or -> noFlag (.|.)
+    And -> noFlag (.&.)
+    XOr -> noFlag xor
+    Add -> withFlag add
+    Subtract -> withFlag sub
+    SubtractNeg -> withFlag (flip sub)
+    ShiftRight -> withFlag (\_ y -> extend y `rotateR` 1)
+    ShiftLeft -> withFlag (\_ y -> extend y `rotateL` 1)
   where
-    noCarry :: (Byte -> Byte -> Byte) -> (Byte -> Byte -> (Maybe Bit, Byte))
-    noCarry f x y = (Nothing, f x y)
+    noFlag :: (Byte -> Byte -> Byte) -> (Byte -> Byte -> (Maybe Bit, Byte))
+    noFlag f x y = (Nothing, f x y)
 
-    carry :: (Unsigned 8 -> Unsigned 8 -> Unsigned 9) -> (Byte -> Byte -> (Maybe Bit, Byte))
-    carry f x y = let (c, z) = bitCoerce (f (bitCoerce x) (bitCoerce y)) in (Just c, z)
+    withFlag :: (Unsigned 8 -> Unsigned 8 -> Unsigned 9) -> (Byte -> Byte -> (Maybe Bit, Byte))
+    withFlag f x y = (Just c, z)
+      where
+        (c, z) = bitCoerce (f (bitCoerce x) (bitCoerce y))
 
 toHex :: Byte -> Addr
 toHex x = extend (fromIntegral x :: Nybble) `shiftL` 3

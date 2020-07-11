@@ -38,7 +38,7 @@ data Instr
     deriving (Show)
 
 data Fun
-    = Id           -- MOV
+    = Mov          -- MOV
     | Or           -- OR
     | And          -- AND
     | XOr          -- XOR
@@ -87,7 +87,7 @@ decodeInstr hi lo = case nybbles of
     imm = lo
 
 decodeFun :: Nybble -> Fun
-decodeFun 0x0 = Id
+decodeFun 0x0 = Mov
 decodeFun 0x1 = Or
 decodeFun 0x2 = And
 decodeFun 0x3 = XOr
