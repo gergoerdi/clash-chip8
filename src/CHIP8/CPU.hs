@@ -121,13 +121,13 @@ step CPUIn{..} = do
            when collision $ setFlag high
            writeVid (y + fromIntegral row) pattern
            phase .= maybe Fetch (DrawRead x y) (predIdx row)
-        WaitKeyRelease reg prevState -> do
+        WaitKeyRelease vx prevState -> do
             case keyRelease prevState keyState of
                 Just key -> do
-                    setReg reg $ fromIntegral key
+                    setReg vx $ fromIntegral key
                     phase .= Fetch
                 Nothing -> do
-                    phase .= WaitKeyRelease reg keyState
+                    phase .= WaitKeyRelease vx keyState
         WriteBCD x i -> do
             addr <- uses ptr (+ fromIntegral i)
             writeMem addr . fromIntegral $ toBCD x !! i
@@ -257,4 +257,6 @@ step CPUIn{..} = do
     skip = pc += 2
 
 keyRelease :: KeypadState -> KeypadState -> Maybe Key
-keyRelease prev new = fmap bitCoerce $ elemIndex True $ zipWith (\ before now -> before && not now) prev new
+keyRelease prev new = bitCoerce <$> findIndex released (zip prev new)
+  where
+    released (before, now) = before && not now
