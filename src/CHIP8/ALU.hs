@@ -1,3 +1,4 @@
+{-# LANGUAGE NumericUnderscores #-}
 module CHIP8.ALU where
 
 import Clash.Prelude
@@ -28,13 +29,15 @@ alu fun = case fun of
 toHex :: Byte -> Addr
 toHex x = extend (fromIntegral x :: Nybble) `shiftL` 3
 
+lfsr :: (KnownNat n) => Vec (1 + n) Bit -> Vec (1 + n) Bit -> Vec (1 + n) Bit
+lfsr coeffs (b0 :> bs) = zipWith xor (bs :< 0) feedback
+  where
+    feedback = fmap (b0 *) coeffs
+
 -- | 9-bit maximal linear feedback shift register based on x^9 + x^5 + 1
 -- http://en.wikipedia.org/wiki/Linear_feedback_shift_register#Some_polynomials_for_maximal_LFSRs
-lfsr :: Unsigned 9 -> Unsigned 9
-lfsr s = (s `rotateR` 1) `xor` b4
-  where
-    b = fromIntegral $ complement . lsb $ s
-    b4 = b `shiftL` 4
+lfsr9 :: Unsigned 9 -> Unsigned 9
+lfsr9 = bitCoerce . lfsr (unpack 0b0_0010_0001) . bitCoerce
 
 toBCD :: Byte -> Vec 3 (Unsigned 4)
 toBCD x = extend x100 :> x10 :> x1 :> Nil

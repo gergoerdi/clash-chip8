@@ -77,7 +77,7 @@ initState = CPUState
     , _stack = Stack (repeat 0) 0
     , _phase = Init
     , _timer = 0
-    , _randomState = 0
+    , _randomState = 0x100
     }
 
 defaultOut :: CPUState -> Pure CPUOut
@@ -98,7 +98,7 @@ cpu = mealyCPU initState defaultOut step
 
 step :: Pure CPUIn -> CPU ()
 step CPUIn{..} = do
-    randomState %= lfsr
+    randomState %= lfsr9
     when tick $ timer %= fromMaybe 0 . predIdx
 
     use phase >>= \case
