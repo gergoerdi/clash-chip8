@@ -23,7 +23,7 @@ clashProject = ClashProject
     , clashFlags =
         [ "-i../retroclash-lib/src"
         , "-Wno-partial-type-signatures"
-        , "-fclash-inline-limit=400"
+        , "-fclash-inline-limit=600"
         ]
     , buildDir = "_build"
     , clashDir = "clash-syn"

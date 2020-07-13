@@ -59,12 +59,12 @@ data Phase
     deriving (Show, Generic, NFDataX)
 
 data CPUState = CPUState
-    { _pc, _ptr :: Addr
-    , _registers :: Vec 16 Byte
-    , _stack :: Stack 24 Addr
-    , _phase :: Phase
-    , _timer :: Byte
-    , _randomState :: Unsigned 9
+    { _pc, _ptr :: !Addr
+    , _registers :: !(Vec 16 Byte)
+    , _stack :: !(Stack 24 Addr)
+    , _phase :: !Phase
+    , _timer :: !Byte
+    , _randomState :: !(Unsigned 9)
     }
     deriving (Show, Generic, NFDataX)
 makeLenses ''CPUState
