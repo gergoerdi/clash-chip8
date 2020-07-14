@@ -49,9 +49,9 @@ data Phase
     = Init
     | Fetch
     | Exec Byte
-    | ClearFB VidY
-    | DrawRead VidX VidY Nybble
-    | DrawWrite VidX VidY Nybble
+    | ClearVideoBuf VidY
+    | DrawRead VidX VidY Nybble Nybble
+    | DrawWrite VidX VidY Nybble Nybble
     | WaitKeyRelease Reg KeypadState
     | WriteRegs Reg
     | ReadRegs Reg
@@ -106,21 +106,26 @@ step CPUIn{..} = do
         Fetch -> do
             pc += 1
             phase .= Exec memRead
-        ClearFB y -> clearScreen y
-        DrawRead x y row -> do
-           addr <- uses ptr (+ fromIntegral row)
-           vidAddr .:= y + fromIntegral row
-           memAddr .:= addr
-           phase .= DrawWrite x y row
-        DrawWrite x y row -> do
-           let bg = vidRead
-               sprite = bitCoerce memRead ++ repeat low
-               sprite' = bitCoerce sprite `shiftR` fromIntegral x
-               pattern = bg `xor` sprite'
-               collision = (bg .&. sprite') /= 0
-           when collision $ setFlag high
-           writeVid (y + fromIntegral row) pattern
-           phase .= maybe Fetch (DrawRead x y) (predIdx row)
+        ClearVideoBuf y -> do
+            writeVid y 0
+            phase .= maybe Fetch ClearVideoBuf (succIdx y)
+        DrawRead x y height row -> do
+            spriteAddr <- use ptr
+            memAddr .:= spriteAddr + extend row
+            vidAddr .:= y + extend row
+            phase .= DrawWrite x y height row
+        DrawWrite x y height row -> do
+            let finished = row == height
+                outOfBounds = msb (add y row) == 1
+            if finished || outOfBounds then phase .= Fetch else do
+                let bg = vidRead
+                    sprite = bitCoerce (memRead, repeat low)
+                    sprite' = sprite `shiftR` fromIntegral x
+                    pattern = bg `xor` sprite'
+                    collision = (bg .&. sprite') /= 0
+                when collision $ setFlag 1
+                writeVid (y + extend row) pattern
+                phase .= DrawRead x y height (row + 1)
         WaitKeyRelease vx prevState -> do
             case keyRelease prevState keyState of
                 Just key -> do
@@ -150,7 +155,7 @@ step CPUIn{..} = do
             phase .= Fetch
             case traceShowId $ decodeInstr hi lo of
                 ClearScreen -> do
-                    clearScreen 0
+                    phase .= ClearVideoBuf 0
                 Ret -> do
                     popPC
                 Jump addr -> do
@@ -189,13 +194,8 @@ step CPUIn{..} = do
                 DrawSprite vx vy height -> do
                     x <- fromIntegral <$> getReg vx
                     y <- fromIntegral <$> getReg vy
-                    let height' = if height == 0 then 15 else height - 1
-                        height'' = truncateB $ satAdd SatBound y (extend height') - y
                     setFlag low
-                    -- We draw from bottom to top. This allows using
-                    -- the remaining height being 0 as a stopping
-                    -- condition.
-                    phase .= DrawRead x y height''
+                    phase .= DrawRead x y height 0
                 SkipKeyIs b vx -> do
                     key <- toKey <$> getReg vx
                     let isPressed = keyState !! key
@@ -224,10 +224,6 @@ step CPUIn{..} = do
                     memAddr .:= addr
                     phase .= ReadRegs regMax
   where
-    clearScreen y = do
-        writeVid y 0
-        phase .= maybe Fetch ClearFB (succIdx y)
-
     setReg reg val = registers %= replace reg val
     getReg reg = uses registers (!! reg)
     setFlag = setReg 0xf . fromIntegral
