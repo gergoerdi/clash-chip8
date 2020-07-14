@@ -213,7 +213,7 @@ step CPUIn{..} = do
                     ptr += fromIntegral x
                 LoadHex vx -> do
                     x <- getReg vx
-                    ptr .= toHex x
+                    ptr .= toHex (fromIntegral x)
                 StoreBCD vx -> do
                     x <- getReg vx
                     phase .= WriteBCD x 0

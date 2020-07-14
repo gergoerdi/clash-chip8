@@ -26,8 +26,8 @@ alu fun = case fun of
       where
         (c, z) = bitCoerce (f (bitCoerce x) (bitCoerce y))
 
-toHex :: Byte -> Addr
-toHex x = extend (fromIntegral x :: Nybble) `shiftL` 3
+toHex :: Nybble -> Addr
+toHex x = extend x `shiftL` 3
 
 lfsr :: (KnownNat n) => Vec (1 + n) Bit -> Vec (1 + n) Bit -> Vec (1 + n) Bit
 lfsr coeffs (b0 :> bs) = zipWith xor (bs :< 0) feedback
