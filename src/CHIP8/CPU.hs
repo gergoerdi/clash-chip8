@@ -8,6 +8,7 @@ import CHIP8.Opcode
 import CHIP8.ALU
 
 import RetroClash.Utils
+import RetroClash.BCD
 import RetroClash.CPU
 import RetroClash.Barbies
 import RetroClash.Stack
@@ -135,7 +136,7 @@ step CPUIn{..} = do
                     phase .= WaitKeyRelease vx keyState
         WriteBCD x i -> do
             addr <- uses ptr (+ fromIntegral i)
-            writeMem addr . fromIntegral $ toBCD x !! i
+            writeMem addr . fromIntegral $ toBCD (bitCoerce x) !! i
             phase .= maybe Init (WriteBCD x) (succIdx i)
         WriteRegs reg -> do
             addr <- uses ptr (+ fromIntegral reg)

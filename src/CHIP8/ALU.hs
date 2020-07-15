@@ -1,4 +1,5 @@
 {-# LANGUAGE NumericUnderscores #-}
+{-# OPTIONS_GHC -fconstraint-solver-iterations=5 #-}
 module CHIP8.ALU where
 
 import Clash.Prelude
@@ -38,21 +39,3 @@ lfsr coeffs (b0 :> bs) = zipWith xor (bs :< 0) feedback
 -- http://en.wikipedia.org/wiki/Linear_feedback_shift_register#Some_polynomials_for_maximal_LFSRs
 lfsr9 :: Unsigned 9 -> Unsigned 9
 lfsr9 = bitCoerce . lfsr (unpack 0b0_0010_0001) . bitCoerce
-
-toBCD :: Byte -> Vec 3 (Unsigned 4)
-toBCD x = extend x100 :> x10 :> x1 :> Nil
-  where
-    coords :: Unsigned (2 + 4 + 4 + 8) -> (Unsigned 2, Unsigned 4, Unsigned 4, Unsigned 8)
-    coords = bitCoerce
-
-    (x100, x10, x1, _) = coords $ last $ iterate d8 (shift . add3) . shift $ buf0
-      where
-        buf0 = fromIntegral x
-
-        shift = (`shiftL` 1)
-
-        add3 x | x1 >= 5 = x + 0x0300
-               | x10 >= 5 = x + 0x3000
-               | otherwise = x
-          where
-            (_, x10, x1, _) = coords x
