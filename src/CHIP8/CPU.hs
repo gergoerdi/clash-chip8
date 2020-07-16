@@ -50,13 +50,13 @@ data Phase
     = Init
     | Fetch
     | Exec Byte
+    | WaitKeyRelease Reg KeypadState
     | ClearVideoBuf VidY
     | DrawRead VidX VidY Nybble Nybble
     | DrawWrite VidX VidY Nybble Nybble
-    | WaitKeyRelease Reg KeypadState
+    | WriteBCD Reg (Index 3)
     | WriteRegs Reg Reg
     | ReadRegs Reg Reg
-    | WriteBCD Reg (Index 3)
     deriving (Show, Generic, NFDataX)
 
 data CPUState = CPUState
