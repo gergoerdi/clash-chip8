@@ -56,7 +56,7 @@ data Phase
     | WaitKeyRelease Reg KeypadState
     | WriteRegs Reg
     | ReadRegs Reg
-    | WriteBCD Byte (Index 3)
+    | WriteBCD Reg (Index 3)
     deriving (Show, Generic, NFDataX)
 
 data CPUState = CPUState
@@ -134,10 +134,13 @@ step CPUIn{..} = do
                     phase .= Fetch
                 Nothing -> do
                     phase .= WaitKeyRelease vx keyState
-        WriteBCD x i -> do
+        WriteBCD vx i -> do
+            x <- getReg vx
             addr <- uses ptr (+ fromIntegral i)
-            writeMem addr . fromIntegral $ toBCD (bitCoerce x) !! i
-            phase .= maybe Init (WriteBCD x) (succIdx i)
+            writeMem addr $ toBCD' x !! i
+            phase .= maybe Init (WriteBCD vx) (succIdx i)
+          where
+            toBCD' = fmap fromIntegral . toBCD . bitCoerce
         WriteRegs reg -> do
             addr <- uses ptr (+ fromIntegral reg)
             writeMem addr =<< getReg reg
@@ -216,8 +219,7 @@ step CPUIn{..} = do
                     x <- getReg vx
                     ptr .= toHex (fromIntegral x)
                 StoreBCD vx -> do
-                    x <- getReg vx
-                    phase .= WriteBCD x 0
+                    phase .= WriteBCD vx 0
                 StoreRegs regMax -> do
                     phase .= WriteRegs regMax
                 LoadRegs regMax -> do
