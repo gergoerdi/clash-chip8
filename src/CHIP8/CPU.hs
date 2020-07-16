@@ -54,8 +54,8 @@ data Phase
     | DrawRead VidX VidY Nybble Nybble
     | DrawWrite VidX VidY Nybble Nybble
     | WaitKeyRelease Reg KeypadState
-    | WriteRegs Reg
-    | ReadRegs Reg
+    | WriteRegs Reg Reg
+    | ReadRegs Reg Reg
     | WriteBCD Reg (Index 3)
     deriving (Show, Generic, NFDataX)
 
@@ -134,25 +134,24 @@ step CPUIn{..} = do
                     phase .= Fetch
                 Nothing -> do
                     phase .= WaitKeyRelease vx keyState
-        WriteBCD vx i -> do
+        WriteBCD vx k -> do
             x <- getReg vx
-            addr <- uses ptr (+ fromIntegral i)
-            writeMem addr $ toBCD' x !! i
-            phase .= maybe Init (WriteBCD vx) (succIdx i)
+            addr <- uses ptr (+ fromIntegral k)
+            writeMem addr $ toBCD' x !! k
+            phase .= maybe Init (WriteBCD vx) (succIdx k)
           where
             toBCD' = fmap fromIntegral . toBCD . bitCoerce
-        WriteRegs reg -> do
+        WriteRegs reg end -> do
             addr <- uses ptr (+ fromIntegral reg)
             writeMem addr =<< getReg reg
-            phase .= maybe Init WriteRegs (predIdx reg)
-        ReadRegs reg -> do
+            phase .= if reg == end then Init else WriteRegs (reg + 1) end
+        ReadRegs reg end -> do
             setReg reg memRead
-            case predIdx reg of
-                Nothing -> phase .= Fetch
-                Just reg' -> do
-                    addr <- uses ptr (+ fromIntegral reg')
-                    memAddr .:= addr
-                    phase .= ReadRegs reg'
+            if reg == end then phase .= Fetch else do
+                let reg' = reg + 1
+                addr <- uses ptr (+ fromIntegral reg')
+                memAddr .:= addr
+                phase .= ReadRegs reg' end
         Exec hi -> do
             let lo = memRead
             pc += 1
@@ -220,12 +219,12 @@ step CPUIn{..} = do
                     ptr .= toHex (fromIntegral x)
                 StoreBCD vx -> do
                     phase .= WriteBCD vx 0
-                StoreRegs regMax -> do
-                    phase .= WriteRegs regMax
-                LoadRegs regMax -> do
-                    addr <- uses ptr (+ fromIntegral regMax)
+                StoreRegs vx -> do
+                    phase .= WriteRegs 0 vx
+                LoadRegs vx -> do
+                    addr <- use ptr
                     memAddr .:= addr
-                    phase .= ReadRegs regMax
+                    phase .= ReadRegs 0 vx
   where
     setReg reg val = registers %= replace reg val
     getReg reg = uses registers (!! reg)
