@@ -32,7 +32,7 @@ import Text.Printf
 declareBareB [d|
   data CPUIn = CPUIn
       { memRead :: Byte
-      , vidRead :: VidRow
+      , vidRead :: Maybe VidRow
       , keyState :: KeypadState
       , tick :: Bool
       } |]
@@ -115,18 +115,23 @@ step CPUIn{..} = do
             memAddr .:= spriteAddr + extend row
             vidAddr .:= y + extend row
             phase .= DrawWrite x y height row
-        DrawWrite x y height row -> do
-            let finished = row == height
-                outOfBounds = msb (add y row) == 1
-            if finished || outOfBounds then phase .= Fetch else do
-                let bg = vidRead
-                    sprite = bitCoerce (memRead, repeat low)
-                    sprite' = sprite `shiftR` fromIntegral x
-                    pattern = bg `xor` sprite'
-                    collision = (bg .&. sprite') /= 0
-                when collision $ setFlag 1
-                writeVid (y + extend row) pattern
-                phase .= DrawRead x y height (row + 1)
+        DrawWrite x y height row -> case vidRead of
+            Nothing -> do
+                -- Preserve address bus values for next cycle
+                spriteAddr <- use ptr
+                memAddr .:= spriteAddr + extend row
+                vidAddr .:= y + extend row
+            Just bg -> do
+                let finished = row == height
+                    outOfBounds = msb (add y row) == 1
+                if finished || outOfBounds then phase .= Fetch else do
+                    let sprite = bitCoerce (memRead, repeat low)
+                        sprite' = sprite `shiftR` fromIntegral x
+                        pattern = bg `xor` sprite'
+                        collision = (bg .&. sprite') /= 0
+                    when collision $ setFlag 1
+                    writeVid (y + extend row) pattern
+                    phase .= DrawRead x y height (row + 1)
         WaitKeyRelease vx prevState -> do
             case keyRelease prevState keyState of
                 Just key -> do

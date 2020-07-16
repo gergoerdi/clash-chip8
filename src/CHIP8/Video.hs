@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards, NumericUnderscores, ApplicativeDo #-}
-{-# LANGUAGE MonomorphismRestriction #-}
+{-# LANGUAGE MonomorphismRestriction, ViewPatterns #-}
 module CHIP8.Video where
 
 import Clash.Prelude
@@ -18,9 +18,13 @@ createDomain vSystem{vName="Dom25", vPeriod = hzToPeriod 25_175_000}
 
 video
     :: (HiddenClockResetEnable Dom25)
-    => Signal Dom25 (Maybe (VidY, VidRow))
-    -> (Signal Dom25 Bool, VGAOut Dom25 8 8 8)
-video write = (frameEnd, delayVGA vgaSync rgb)
+    => Signal Dom25 VidY
+    -> Signal Dom25 (Maybe VidRow)
+    -> ( Signal Dom25 Bool
+       , Signal Dom25 (Maybe VidRow)
+       , VGAOut Dom25 8 8 8
+       )
+video (fromSignal -> cpuAddr) (fromSignal -> write) = (frameEnd, toSignal cpuRead, delayVGA vgaSync rgb)
   where
     VGADriver{..} = vgaDriver vga640x480at60
     frameEnd = isFalling False (isJust <$> vgaY)
@@ -38,14 +42,19 @@ video write = (frameEnd, delayVGA vgaSync rgb)
     pixel = enable (delayI False visible) $ msb <$> row
     visible = isJust <$> vgaX' .&&. isJust <$> vgaY'
 
-    address = bitCoerce <$> mux newY vgaY' (pure Nothing)
-    load = delayedRam (blockRam1 ClearOnReset (SNat @32) 0) (fromMaybe 0 <$> address) (fromSignal write)
+    vgaAddr = bitCoerce <$> mux newY vgaY' (pure Nothing)
+
+    addr = fromMaybe <$> cpuAddr <*> vgaAddr
+    load = delayedRam (blockRam1 ClearOnReset (SNat @32) 0) addr
+        (packWrite <$> cpuAddr <*> write)
+
+    cpuRead = enable (delayI False $ isNothing <$> vgaAddr) load
 
     lineStart = liftD (isRising False) $ (isJust <$> vgaX')
     newY = liftD (changed Nothing) vgaY'
     newX = visible .&&. liftD (changed Nothing) vgaX'
 
     row = delayedRegister 0 $ \row ->
-        mux (delayI False $ isJust <$> address) load $
+        mux (delayI False $ isJust <$> vgaAddr) load $
         mux (delayI False newX) ((`rotateL` 1) <$> row) $
         row

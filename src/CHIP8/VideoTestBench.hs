@@ -21,8 +21,8 @@ topEntity = withEnableGen board
   where
     board keyState = vga
       where
-        (frameEnd, vga) = video vidWrite
-        vidWrite = logicBoard "image.bin" frameEnd keyState
+        (frameEnd, vidRead, vga) = video vidAddr vidWrite
+        (vidAddr, vidWrite) = logicBoard "image.bin" frameEnd keyState vidRead
 
         -- ptr = regEn 0 frameEnd $ ptr + 1
         -- val = regEn 0xaa_aa_aa_aa_aa_aa_aa_aa frameEnd $ complement <$> val

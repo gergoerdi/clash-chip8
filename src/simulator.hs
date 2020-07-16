@@ -26,7 +26,7 @@ world
     -> IO (Pure CPUIn)
 world ram vid keyState tick CPUOut{..} = do
     memRead <- readMem _memAddr
-    vidRead <- readVid _vidAddr
+    vidRead <- Just <$> readVid _vidAddr
 
     traverse_ (writeMem _memAddr) _memWrite
     traverse_ (writeVid _vidAddr) _vidWrite
@@ -54,7 +54,7 @@ main = do
 
     let initInput = CPUIn
             { memRead = 0
-            , vidRead = 0
+            , vidRead = Nothing
             , tick = False
             , keyState = repeat False
             }
@@ -63,10 +63,10 @@ main = do
         guard $ not $ keyDown ScancodeEscape
 
         let keyState = fmap keyDown keyboardMap
-            sim firstForFrame = do
+            sim tick = do
                 (inp, s) <- get
                 let (out, s') = runState (cpuMachine inp) s
-                inp' <- liftIO $ world ram vid keyState firstForFrame out
+                inp' <- liftIO $ world ram vid keyState tick out
                 put (inp', s')
 
         sim True

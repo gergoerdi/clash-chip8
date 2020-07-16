@@ -29,7 +29,7 @@ topEntity = withEnableGen board
             debounce (SNat @(Milliseconds 5)) (repeat False) $
             scatter (repeat False) (concat layout) <$> (concat <$> keypadState)
 
-        (frameEnd, vga) = video vidWrite
-        vidWrite = logicBoard "image.bin" frameEnd keyState
+        (frameEnd, vidRead, vga) = video vidAddr vidWrite
+        (vidAddr, vidWrite) = logicBoard "image.bin" frameEnd keyState vidRead
 
 makeTopEntity 'topEntity

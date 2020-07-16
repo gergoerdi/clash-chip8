@@ -18,14 +18,15 @@ logicBoard
     => FilePath
     -> Signal dom Bool
     -> Signal dom KeypadState
-    -> Signal dom (Maybe (VidY, VidRow))
-logicBoard programFile tick keyState = vidOut
+    -> Signal dom (Maybe VidRow)
+    -> ( Signal dom VidY
+       , Signal dom (Maybe VidRow)
+       )
+logicBoard programFile tick keyState vidRead = (_vidAddr, _vidWrite)
   where
     CPUOut{..} = cpu CPUIn{..}
-    vidOut = packWrite <$> _vidAddr <*> _vidWrite
 
     memRead = memory memSpec _memAddr _memWrite
-    vidRead = blockRam1 ClearOnReset (SNat @32) 0 _vidAddr vidOut
 
     -- Use TH to force `hexDigits` into normal form, otherwise Clash synthesis fails
     memSpec =

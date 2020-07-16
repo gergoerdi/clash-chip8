@@ -11,8 +11,9 @@ import RetroClash.Sim.SDL
 import Control.Monad.State
 import Data.Word
 import Data.Array.IO
+import Data.Tuple.Extra (uncurry3)
 import qualified Data.ByteString as BS
-import Data.Foldable (for_)
+import Data.Foldable (for_, traverse_)
 
 import System.IO
 import System.IO.Temp
@@ -21,10 +22,12 @@ import Options.Applicative
 
 world
     :: IOUArray Word8 Word64
-    -> Maybe (VidY, VidRow)
-    -> IO ()
-world vid vidWrite = for_ vidWrite $ \(addr, row) -> do
-    writeArray vid (fromIntegral addr) row
+    -> VidY
+    -> Maybe VidRow
+    -> IO VidRow
+world vid vidAddr vidWrite = do
+    traverse_ (writeArray vid (fromIntegral vidAddr)) vidWrite
+    readArray vid (fromIntegral vidAddr)
 
 main :: IO ()
 main = withSystemTempFile "chip8-.bin" $ \romFile romHandle -> do
@@ -37,20 +40,20 @@ main = withSystemTempFile "chip8-.bin" $ \romFile romHandle -> do
     vid <- newArray (0, 31) 0
 
     sim <- simulateIO_ @System
-           (uncurry (logicBoard romFile) . unbundle)
-           (False, repeat False)
+           (bundle . uncurry3 (logicBoard romFile) . unbundle)
+           (False, repeat False, Nothing)
 
     withMainWindow videoParams $ \events keyDown -> do
         guard $ not $ keyDown ScancodeEscape
 
         let keyState = fmap keyDown keyboardMap
 
-        let step firstForFrame = do
-                sim $ \vidWrite -> do
-                    liftIO $ world vid vidWrite
-                    return (firstForFrame, keyState)
-        step True
-        replicateM_ 1000 $ step False
+        let step i = sim $ \(vidAddr, vidWrite) -> do
+                let tick = i == (0 :: Int)
+                    allowVideoAccess = i `mod` 23 == 1
+                vidRead <- liftIO $ world vid vidAddr vidWrite
+                return (tick, keyState, vidRead <$ guard allowVideoAccess)
+        mapM_ step [0..1000]
 
         rasterizeVideoBuf vid
 
