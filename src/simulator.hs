@@ -27,15 +27,13 @@ import SDL.Input.Keyboard.Codes
 world
     :: IOUArray Word16 Word8
     -> IOUArray Word8 Word64
-    -> Vec (4 * 4) Bool
+    -> KeypadState
     -> Bool
     -> Pure CPUOut
     -> IO (Pure CPUIn)
-world ram vid keyState firstForFrame CPUOut{..} = do
+world ram vid keyState tick CPUOut{..} = do
     memRead <- readMem _memAddr
     vidRead <- readVid _vidAddr
-    tick <- return firstForFrame
-    keyState <- return keyState
 
     traverse_ (writeMem _memAddr) _memWrite
     traverse_ (writeVid _vidAddr) _vidWrite
