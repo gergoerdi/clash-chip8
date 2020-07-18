@@ -46,16 +46,16 @@ world ram vid keyState tick CPUOut{..} = do
     writeMem addr = writeArray ram (fromIntegral addr)
     writeVid addr = writeArray vid (fromIntegral addr)
 
-scanLayout :: Matrix 4 4 Scancode
-scanLayout =
+keyboardLayout :: Matrix 4 4 Scancode
+keyboardLayout =
     (Scancode1 :> Scancode2 :> Scancode3 :> Scancode4 :> Nil) :>
     (ScancodeQ :> ScancodeW :> ScancodeE :> ScancodeR :> Nil) :>
     (ScancodeA :> ScancodeS :> ScancodeD :> ScancodeF :> Nil) :>
     (ScancodeZ :> ScancodeX :> ScancodeC :> ScancodeV :> Nil) :>
     Nil
 
-scanMap :: Vec 16 Scancode
-scanMap = scatter (repeat ScancodeUnknown) (concat layout) (concat scanLayout)
+keyboardMap :: Vec 16 Scancode
+keyboardMap = scatter (repeat ScancodeUnknown) (concat layout) (concat keyboardLayout)
 
 main :: IO ()
 main = do
@@ -78,7 +78,7 @@ main = do
       withMainWindow videoParams $ \events keyDown -> do
         guard $ not $ keyDown ScancodeEscape
 
-        let keyState = fmap keyDown scanMap
+        let keyState = fmap keyDown keyboardMap
             sim firstForFrame = do
                 (inp, s) <- get
                 let (out, s') = runState (cpuMachine inp) s
