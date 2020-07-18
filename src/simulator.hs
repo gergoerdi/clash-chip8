@@ -60,7 +60,7 @@ keyboardMap = scatter (repeat ScancodeUnknown) (concat layout) (concat keyboardL
 main :: IO ()
 main = do
     ram <- do
-        ram <- newArray (0, 4095) 0
+        ram <- newArray (0x000, 0xfff) 0
         zipWithM_ (writeArray ram) [0x000..] (toList hexDigits)
 
         img <- BS.readFile "roms/hidden.ch8"
