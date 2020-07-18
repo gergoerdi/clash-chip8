@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, RecordWildCards, NumericUnderscores #-}
+{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 module Main where
 
 import Clash.Prelude hiding ((!))
@@ -86,7 +86,7 @@ main = do
                 put (inp', s')
 
         sim True
-        replicateM_ 10_000 $ sim False
+        replicateM_ 5000 $ sim False
 
         vidArr <- liftIO $ freeze vid
         return $ rasterizePattern @64 @32 $ \x y ->
