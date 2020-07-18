@@ -14,13 +14,15 @@ alu fun = case fun of
     And -> noFlag (.&.)
     XOr -> noFlag xor
     Add -> withFlag add
-    Subtract -> withFlag sub
-    SubtractNeg -> withFlag (flip sub)
+    Subtract -> withFlag sub'
+    SubtractNeg -> withFlag (flip sub')
     ShiftRight -> withFlag (\_ y -> extend y `rotateR` 1)
     ShiftLeft -> withFlag (\_ y -> extend y `rotateL` 1)
   where
     noFlag :: (Byte -> Byte -> Byte) -> (Byte -> Byte -> (Maybe Bit, Byte))
     noFlag f x y = (Nothing, f x y)
+
+    sub' x y = sub x y `xor` 0x100
 
     withFlag :: (Unsigned 8 -> Unsigned 8 -> Unsigned 9) -> (Byte -> Byte -> (Maybe Bit, Byte))
     withFlag f x y = (Just c, z)
