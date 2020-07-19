@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
+{-# LANGUAGE RecordWildCards #-}
 module Main where
 
 import Clash.Prelude
@@ -70,10 +70,3 @@ main = do
         replicateM_ 5000 $ sim False
 
         rasterizeVideoBuf vid
-  where
-    videoParams = MkVideoParams
-        { windowTitle = "CHIP-8"
-        , screenScale = 20
-        , screenRefreshRate = 60
-        , reportFPS = True
-        }

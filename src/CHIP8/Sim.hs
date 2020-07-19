@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings #-}
 module CHIP8.Sim where
 
 import Clash.Prelude hiding ((!))
@@ -31,3 +31,11 @@ rasterizeVideoBuf vid = do
           bg = (0x50, 0x50, 0x50)
           row = vidArr ! fromIntegral y
       in if testBit row (fromIntegral (maxBound - x)) then fg else bg
+
+videoParams :: VideoParams
+videoParams = MkVideoParams
+    { windowTitle = "CHIP-8"
+    , screenScale = 20
+    , screenRefreshRate = 60
+    , reportFPS = True
+    }

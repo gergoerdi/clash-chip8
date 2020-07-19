@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings, RecordWildCards, NumericUnderscores #-}
 module Main where
 
 import Clash.Prelude
@@ -51,13 +50,6 @@ main = withSystemTempFile "chip8-.bin" $ \romFile romHandle -> do
         replicateM_ 1000 $ step False
 
         rasterizeVideoBuf vid
-  where
-    videoParams = MkVideoParams
-        { windowTitle = "CHIP-8"
-        , screenScale = 20
-        , screenRefreshRate = 60
-        , reportFPS = True
-        }
 
 binLines :: Maybe Int -> [Word8] -> [String]
 binLines size bs = L.map (L.filter (/= '_') . show . pack) bytes
