@@ -1,28 +1,20 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 module Main where
 
-import Clash.Prelude hiding ((!))
+import Clash.Prelude
 
 import CHIP8.Types
 import CHIP8.CPU
 import CHIP8.Font
-import CHIP8.Input
+import CHIP8.Sim
 
 import RetroClash.Sim.SDL
 import RetroClash.Barbies
-import RetroClash.Keypad
 import Control.Monad.State
-import Data.Maybe
 import Data.Word
-import Data.Array ((!))
 import Data.Array.IO
 import qualified Data.ByteString as BS
 import Data.Foldable (traverse_)
-import Data.Bits
-import Debug.Trace
-import SDL.Event as SDL
-import SDL.Input.Keyboard
-import SDL.Input.Keyboard.Codes
 
 world
     :: IOUArray Word16 Word8
@@ -45,17 +37,6 @@ world ram vid keyState tick CPUOut{..} = do
 
     writeMem addr = writeArray ram (fromIntegral addr)
     writeVid addr = writeArray vid (fromIntegral addr)
-
-keyboardLayout :: Matrix 4 4 Scancode
-keyboardLayout =
-    (Scancode1 :> Scancode2 :> Scancode3 :> Scancode4 :> Nil) :>
-    (ScancodeQ :> ScancodeW :> ScancodeE :> ScancodeR :> Nil) :>
-    (ScancodeA :> ScancodeS :> ScancodeD :> ScancodeF :> Nil) :>
-    (ScancodeZ :> ScancodeX :> ScancodeC :> ScancodeV :> Nil) :>
-    Nil
-
-keyboardMap :: Vec 16 Scancode
-keyboardMap = scatter (repeat ScancodeUnknown) (concat layout) (concat keyboardLayout)
 
 main :: IO ()
 main = do
@@ -88,12 +69,7 @@ main = do
         sim True
         replicateM_ 5000 $ sim False
 
-        vidArr <- liftIO $ freeze vid
-        return $ rasterizePattern @64 @32 $ \x y ->
-          let fg = (0xe7, 0xc2, 0x51)
-              bg = (0x50, 0x50, 0x50)
-              row = vidArr ! fromIntegral y
-          in if testBit row (fromIntegral (maxBound - x)) then fg else bg
+        rasterizeVideoBuf vid
   where
     videoParams = MkVideoParams
         { windowTitle = "CHIP-8"

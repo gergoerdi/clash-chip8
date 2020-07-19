@@ -1,28 +1,19 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards, NumericUnderscores #-}
 module Main where
 
-import Clash.Prelude hiding ((!))
+import Clash.Prelude
 
 import CHIP8.Types
 import CHIP8.LogicBoard
-import CHIP8.Input
+import CHIP8.Sim
 
 import RetroClash.Sim.IO
 import RetroClash.Sim.SDL
-import RetroClash.Barbies
-import RetroClash.Keypad
 import Control.Monad.State
-import Data.Maybe
 import Data.Word
-import Data.Array ((!))
 import Data.Array.IO
 import qualified Data.ByteString as BS
 import Data.Foldable (for_)
-import Data.Bits
-import Debug.Trace
-import SDL.Event as SDL
-import SDL.Input.Keyboard
-import SDL.Input.Keyboard.Codes
 
 import System.IO
 import System.IO.Temp
@@ -35,19 +26,8 @@ world
 world vid vidWrite = for_ vidWrite $ \(addr, row) -> do
     writeArray vid (fromIntegral addr) row
 
-scanLayout :: Matrix 4 4 Scancode
-scanLayout =
-    (Scancode1 :> Scancode2 :> Scancode3 :> Scancode4 :> Nil) :>
-    (ScancodeQ :> ScancodeW :> ScancodeE :> ScancodeR :> Nil) :>
-    (ScancodeA :> ScancodeS :> ScancodeD :> ScancodeF :> Nil) :>
-    (ScancodeZ :> ScancodeX :> ScancodeC :> ScancodeV :> Nil) :>
-    Nil
-
-scanMap :: Vec 16 Scancode
-scanMap = scatter (repeat ScancodeUnknown) (concat layout) (concat scanLayout)
-
 main :: IO ()
-main = withSystemTempFile "chip8-.rom" $ \romFile romHandle -> do
+main = withSystemTempFile "chip8-.bin" $ \romFile romHandle -> do
     img <- BS.readFile "roms/hidden.ch8"
     hPutStr romHandle $ unlines $ binLines (Just (0x1000 - 0x0200)) (BS.unpack img)
     hClose romHandle
@@ -61,21 +41,16 @@ main = withSystemTempFile "chip8-.rom" $ \romFile romHandle -> do
     withMainWindow videoParams $ \events keyDown -> do
         guard $ not $ keyDown ScancodeEscape
 
-        let keyState = fmap keyDown scanMap
+        let keyState = fmap keyDown keyboardMap
 
         let step firstForFrame = do
                 sim $ \vidWrite -> do
                     liftIO $ world vid vidWrite
                     return (firstForFrame, keyState)
         step True
-        replicateM_ 1_000 $ step False
+        replicateM_ 1000 $ step False
 
-        vidArr <- liftIO $ freeze vid
-        return $ rasterizePattern @64 @32 $ \x y ->
-          let fg = (0xe7, 0xc2, 0x51)
-              bg = (0x50, 0x50, 0x50)
-              row = vidArr ! fromIntegral y
-          in if testBit row (fromIntegral (maxBound - x)) then fg else bg
+        rasterizeVideoBuf vid
   where
     videoParams = MkVideoParams
         { windowTitle = "CHIP-8"
