@@ -17,6 +17,7 @@ import Data.Foldable (for_)
 import System.IO
 import System.IO.Temp
 import qualified Data.List as L
+import Options.Applicative
 
 world
     :: IOUArray Word8 Word64
@@ -27,7 +28,9 @@ world vid vidWrite = for_ vidWrite $ \(addr, row) -> do
 
 main :: IO ()
 main = withSystemTempFile "chip8-.bin" $ \romFile romHandle -> do
-    img <- BS.readFile "roms/hidden.ch8"
+    filePath <- execParser optionsInfo
+
+    img <- BS.readFile filePath
     hPutStr romHandle $ unlines $ binLines (Just (0x1000 - 0x0200)) (BS.unpack img)
     hClose romHandle
 

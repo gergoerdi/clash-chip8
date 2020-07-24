@@ -32,6 +32,7 @@ dependencies:
   - sdl2
   - temporary
   - extra
+  - optparse-applicative
 
 # Anything that Clash uses by default should go here
 default-extensions:

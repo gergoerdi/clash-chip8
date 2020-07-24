@@ -15,6 +15,7 @@ import Data.Word
 import Data.Array.IO
 import qualified Data.ByteString as BS
 import Data.Foldable (traverse_)
+import Options.Applicative
 
 world
     :: IOUArray Word16 Word8
@@ -40,11 +41,13 @@ world ram vid keyState tick CPUOut{..} = do
 
 main :: IO ()
 main = do
+    filePath <- execParser optionsInfo
+
     ram <- do
         ram <- newArray (0x000, 0xfff) 0
         zipWithM_ (writeArray ram) [0x000..] (toList hexDigits)
 
-        img <- BS.readFile "roms/hidden.ch8"
+        img <- BS.readFile filePath
         zipWithM_ (writeArray ram) [0x200..] (BS.unpack img)
         return ram
     vid <- newArray (0, 31) 0

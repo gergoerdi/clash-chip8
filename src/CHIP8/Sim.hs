@@ -11,6 +11,7 @@ import Control.Monad.IO.Class
 import Data.Word
 import Data.Array ((!))
 import Data.Array.IO
+import Options.Applicative
 
 keyboardLayout :: Matrix 4 4 Scancode
 keyboardLayout =
@@ -39,3 +40,12 @@ videoParams = MkVideoParams
     , screenRefreshRate = 60
     , reportFPS = True
     }
+
+options :: Parser FilePath
+options = strArgument $ mconcat
+    [ metavar "FILENAME"
+    ]
+
+optionsInfo = info (options <**> helper) $ mconcat
+    [ fullDesc
+    ]
