@@ -31,14 +31,14 @@ main = shakeArgs shakeOptions{ shakeFiles = outDir } $ do
         imageFile <- fromMaybe "roms/hidden.ch8" <$> getConfig "IMAGE"
         binImage (Just $ 0x1000 - 0x0200) imageFile out
 
-    kit@ClashKit{..} <- clashRules outDir "clash" Verilog
+    kit@ClashKit{..} <- clashRules (outDir </> "clash") Verilog
         [ "src" ]
         "CHIP8"
         [ "-Wno-partial-type-signatures"
         , "-fclash-inline-limit=600"
         ] $
         need [outDir </> "image.bin"]
-    phony "clashi" $ clash ["--interactive", unBuildDir "src/CHIP8.hs"]
+    phony "clashi" $ clash ["--interactive", "src/CHIP8.hs"]
 
     let targets =
             [ ("nexys-a7-50t", xilinxVivado nexysA750T)

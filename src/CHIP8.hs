@@ -30,6 +30,6 @@ topEntity = withEnableGen board
             scatter (repeat False) (concat layout) <$> (concat <$> keypadState)
 
         (frameEnd, vidRead, vga) = video vidAddr vidWrite
-        (vidAddr, vidWrite) = logicBoard "image.bin" frameEnd keyState vidRead
+        (vidAddr, vidWrite) = logicBoard "_build/image.bin" frameEnd keyState vidRead
 
 makeTopEntity 'topEntity
