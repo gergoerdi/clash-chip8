@@ -1,8 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module CHIP8.LogicBoard (logicBoard) where
 
-import Clash.Prelude hiding (rom)
-import qualified Clash.Prelude as C
+import Clash.Prelude
 import RetroClash.Utils
 import RetroClash.Memory
 import Data.Maybe
@@ -29,5 +28,5 @@ logicBoard programFile tick keyState vidRead = (_vidAddr, _vidWrite)
 
     memRead = fmap (fromMaybe 0) $ memoryMap_ (Just <$> _memAddr) _memWrite $ do
         -- Use TH to force `hexDigits` into normal form, otherwise Clash synthesis fails
-        mask @9 0x000 $ rom $ C.rom $(lift hexDigits)
-        offset 0x200 $ ram $ packRam $ blockRamFile (SNat @(0x1000 - 0x200)) programFile
+        mask @9 0x000 $ readOnly $ rom $(lift hexDigits)
+        offset 0x200 $ readWrite $ packRam $ blockRamFile (SNat @(0x1000 - 0x200)) programFile
