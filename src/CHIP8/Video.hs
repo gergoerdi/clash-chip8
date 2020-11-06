@@ -29,8 +29,8 @@ video (fromSignal -> cpuAddr) (fromSignal -> write) = (frameEnd, toSignal cpuRea
     VGADriver{..} = vgaDriver vga640x480at60
     frameEnd = isFalling False (isJust <$> vgaY)
 
-    vgaX' = fromSignal $ scale @64 (SNat @10) vgaX
-    vgaY' = fromSignal $ scale @32 (SNat @10) . center $ vgaY
+    vgaX' = fromSignal $ fst . scale @64 (SNat @10) $ vgaX
+    vgaY' = fromSignal $ fst . scale @32 (SNat @10) . center $ vgaY
 
     rgb = maybe border palette <$> pixel
 
@@ -44,10 +44,13 @@ video (fromSignal -> cpuAddr) (fromSignal -> write) = (frameEnd, toSignal cpuRea
 
     vgaAddr = bitCoerce <$> mux newY vgaY' (pure Nothing)
 
+    -- vblank = fromSignal $ isNothing <$> vgaY
+    -- addr = mux vblank cpuAddr (fromMaybe 0 <$> vgaAddr)
     addr = fromMaybe <$> cpuAddr <*> vgaAddr
     load = delayedRam (blockRam1 ClearOnReset (SNat @32) 0) addr
         (packWrite <$> cpuAddr <*> write)
 
+    -- cpuRead = enable (delayI False vblank) load
     cpuRead = enable (delayI False $ isNothing <$> vgaAddr) load
 
     lineStart = liftD (isRising False) $ (isJust <$> vgaX')
