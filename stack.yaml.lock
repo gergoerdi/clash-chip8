@@ -5,44 +5,44 @@
 
 packages:
 - completed:
-    size: 1465521
+    size: 1550721
     subdir: clash-ghc
-    url: https://github.com/clash-lang/clash-compiler/archive/9d454c1f0e7d90c0c22b4d81928714562b4392a7.tar.gz
+    url: https://github.com/clash-lang/clash-compiler/archive/fcd3c63bff3fd475b99616b5b39cffbfd0b795fd.tar.gz
     name: clash-ghc
     version: 1.3.0
-    sha256: 48d83b357eda68f44dcd596e3b1929b56ab2ffa929b9d09c1cac68d2c8b32cfc
+    sha256: b12bce587966c69d00b45ffbb01b06969f40db376d0dc7b647b9ba1b485d633c
     pantry-tree:
-      size: 3353
-      sha256: e253a54868bd1a79977f38d6720953a5ebdf409fdc9e52d0b4ba2652ebf8060f
+      size: 3666
+      sha256: 9881d3cdb803cbcabafefee89a394295583751ed81e5cc82b8ed0091e8ab8756
   original:
     subdir: clash-ghc
-    url: https://github.com/clash-lang/clash-compiler/archive/9d454c1f0e7d90c0c22b4d81928714562b4392a7.tar.gz
+    url: https://github.com/clash-lang/clash-compiler/archive/fcd3c63bff3fd475b99616b5b39cffbfd0b795fd.tar.gz
 - completed:
-    size: 1465521
+    size: 1550721
     subdir: clash-prelude
-    url: https://github.com/clash-lang/clash-compiler/archive/9d454c1f0e7d90c0c22b4d81928714562b4392a7.tar.gz
+    url: https://github.com/clash-lang/clash-compiler/archive/fcd3c63bff3fd475b99616b5b39cffbfd0b795fd.tar.gz
     name: clash-prelude
     version: 1.3.0
-    sha256: 48d83b357eda68f44dcd596e3b1929b56ab2ffa929b9d09c1cac68d2c8b32cfc
+    sha256: b12bce587966c69d00b45ffbb01b06969f40db376d0dc7b647b9ba1b485d633c
     pantry-tree:
-      size: 12800
-      sha256: 57a91cd435753634bffd840d1955f52af49069227585fa07b389bc34a6d3b529
+      size: 13366
+      sha256: dc42fbb2b4af0895b24cc47ac21f91f289984c2ff1d423b8cf9c554afa363ab5
   original:
     subdir: clash-prelude
-    url: https://github.com/clash-lang/clash-compiler/archive/9d454c1f0e7d90c0c22b4d81928714562b4392a7.tar.gz
+    url: https://github.com/clash-lang/clash-compiler/archive/fcd3c63bff3fd475b99616b5b39cffbfd0b795fd.tar.gz
 - completed:
-    size: 1465521
+    size: 1550721
     subdir: clash-lib
-    url: https://github.com/clash-lang/clash-compiler/archive/9d454c1f0e7d90c0c22b4d81928714562b4392a7.tar.gz
+    url: https://github.com/clash-lang/clash-compiler/archive/fcd3c63bff3fd475b99616b5b39cffbfd0b795fd.tar.gz
     name: clash-lib
     version: 1.3.0
-    sha256: 48d83b357eda68f44dcd596e3b1929b56ab2ffa929b9d09c1cac68d2c8b32cfc
+    sha256: b12bce587966c69d00b45ffbb01b06969f40db376d0dc7b647b9ba1b485d633c
     pantry-tree:
-      size: 16850
-      sha256: 9640265b87f70e0aba0b46e0981f30747f062f9e6ae11f3744910a2bf4234abf
+      size: 18005
+      sha256: fec421bfc5e551a689cfd5a226f9c1a4f1515807b6a0e1f3148d9480a7800035
   original:
     subdir: clash-lib
-    url: https://github.com/clash-lang/clash-compiler/archive/9d454c1f0e7d90c0c22b4d81928714562b4392a7.tar.gz
+    url: https://github.com/clash-lang/clash-compiler/archive/fcd3c63bff3fd475b99616b5b39cffbfd0b795fd.tar.gz
 - completed:
     hackage: concurrent-supply-0.1.8@sha256:9373f4868ad28936a7b93781b214ef4afdeacf377ef4ac729583073491c9f9fb,1627
     pantry-tree:
@@ -51,12 +51,12 @@ packages:
   original:
     hackage: concurrent-supply-0.1.8
 - completed:
-    hackage: shake-0.18.2@sha256:0d6a5df63fe1a5c0a6d75ee86e36306cce8306f790ac8c1f791d65757ff62101,14806
+    hackage: ghc-typelits-extra-0.4.1@sha256:ea3f504e032b8e4fa4d5ae1099fce7eeedb49315b20bf2ccd01f6f2ee668cf4d,4815
     pantry-tree:
-      size: 11991
-      sha256: c65170e2f7c3369dbd487a7ab7e1a3542dbc943f05eacca12950001e3414ebfb
+      size: 682
+      sha256: 8e5d285c572712051eb080b4e067af9a8300be1b0c988404e9fa341c2fa68c84
   original:
-    hackage: shake-0.18.2
+    hackage: ghc-typelits-extra-0.4.1
 - completed:
     hackage: barbies-2.0.1.0@sha256:289c0ab2a8477dc09d70653f437b7b83caa8969cc007c866bc52606121cce3c1,4407
     pantry-tree:
@@ -73,7 +73,7 @@ packages:
     hackage: barbies-th-0.1.2
 snapshots:
 - completed:
-    size: 492027
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/15/9.yaml
-    sha256: 11394dc975e96c2fea90f7f2b3229630d46351a092ebcec78f0a56403930b429
-  original: lts-15.9
+    size: 532413
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/16/21.yaml
+    sha256: 7b5cac89352fa4a88606dc6cb250aee9291f21e2e988d464065f5aa51f5de33d
+  original: lts-16.21

@@ -42,7 +42,7 @@ video (fromSignal -> cpuAddr) (fromSignal -> write) = (frameEnd, toSignal cpuRea
     pixel = enable (delayI False visible) $ msb <$> row
     visible = isJust <$> vgaX' .&&. isJust <$> vgaY'
 
-    vgaAddr = bitCoerce <$> mux newY vgaY' (pure Nothing)
+    vgaAddr = bitCoerce <$> guardA newY vgaY'
 
     -- vblank = fromSignal $ isNothing <$> vgaY
     -- addr = mux vblank cpuAddr (fromMaybe 0 <$> vgaAddr)
