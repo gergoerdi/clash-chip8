@@ -21,13 +21,13 @@ import qualified Data.List as L
 import Options.Applicative
 
 world
-    :: IOUArray Word8 Word64
+    :: IOUArray VidY Word64
     -> VidY
     -> Maybe VidRow
     -> IO VidRow
 world vid vidAddr vidWrite = do
-    traverse_ (writeArray vid (fromIntegral vidAddr)) vidWrite
-    readArray vid (fromIntegral vidAddr)
+    traverse_ (writeArray vid vidAddr) vidWrite
+    readArray vid vidAddr
 
 main :: IO ()
 main = withSystemTempFile "chip8-.bin" $ \romFile romHandle -> do
@@ -37,7 +37,7 @@ main = withSystemTempFile "chip8-.bin" $ \romFile romHandle -> do
     hPutStr romHandle $ unlines $ binLines (Just (0x1000 - 0x0200)) (BS.unpack img)
     hClose romHandle
 
-    vid <- newArray (0, 31) 0
+    vid <- newArray (minBound, maxBound) 0
 
     sim <- simulateIO_ @System
            (bundle . uncurry3 (logicBoard romFile) . unbundle)

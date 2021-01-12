@@ -18,39 +18,33 @@ import Data.Foldable (traverse_)
 import Options.Applicative
 
 world
-    :: IOUArray Word16 Word8
-    -> IOUArray Word8 Word64
+    :: IOUArray Addr Word8
+    -> IOUArray VidY Word64
     -> KeypadState
     -> Bool
     -> Pure CPUOut
     -> IO (Pure CPUIn)
 world ram vid keyState tick CPUOut{..} = do
-    memRead <- readMem _memAddr
-    vidRead <- Just <$> readVid _vidAddr
+    memRead <- readArray ram _memAddr
+    vidRead <- Just <$> readArray vid _vidAddr
 
-    traverse_ (writeMem _memAddr) _memWrite
-    traverse_ (writeVid _vidAddr) _vidWrite
+    traverse_ (writeArray ram _memAddr) _memWrite
+    traverse_ (writeArray vid _vidAddr) _vidWrite
 
     return CPUIn{..}
-  where
-    readMem addr = readArray ram (fromIntegral addr)
-    readVid addr = readArray vid (fromIntegral addr)
-
-    writeMem addr = writeArray ram (fromIntegral addr)
-    writeVid addr = writeArray vid (fromIntegral addr)
 
 main :: IO ()
 main = do
     filePath <- execParser optionsInfo
 
     ram <- do
-        ram <- newArray (0x000, 0xfff) 0
+        ram <- newArray (minBound, maxBound) 0
         zipWithM_ (writeArray ram) [0x000..] (toList hexDigits)
 
         img <- BS.readFile filePath
         zipWithM_ (writeArray ram) [0x200..] (BS.unpack img)
         return ram
-    vid <- newArray (0, 31) 0
+    vid <- newArray (minBound, maxBound) 0
 
     let initInput = CPUIn
             { memRead = 0
