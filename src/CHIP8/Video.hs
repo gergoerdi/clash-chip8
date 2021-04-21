@@ -45,8 +45,8 @@ video (fromSignal -> cpuAddr) (fromSignal -> write) = (frameEnd, toSignal cpuRea
     vgaAddr = bitCoerce <$> guardA newY vgaY'
 
     -- vblank = fromSignal $ isNothing <$> vgaY
-    -- addr = mux vblank cpuAddr (fromMaybe 0 <$> vgaAddr)
-    addr = fromMaybe <$> cpuAddr <*> vgaAddr
+    -- addr = mux vblank cpuAddr (vgaAddr .<| 0)
+    addr = vgaAddr .<|. cpuAddr
     load = delayedRam (blockRam1 ClearOnReset (SNat @32) 0) addr
         (packWrite <$> cpuAddr <*> write)
 
