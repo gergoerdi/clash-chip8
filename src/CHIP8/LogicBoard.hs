@@ -31,7 +31,7 @@ logicBoard programFile tick keyState vidRead = (_vidAddr, _vidWrite)
     ramAddr = enable (0x200 <=. _memAddr) (_memAddr - 0x200)
 
     -- Use TH to force `hexDigits` into normal form, otherwise Clash synthesis fails
-    font = rom $(TH.lift hexDigits) (fromJustX <$> fontAddr)
+    font = rom $(TH.lift (hexDigits ++ repeat 0 :: Vec 0x200 Byte)) (fromJustX <$> fontAddr)
     ram = packRam (blockRamFile (SNat @(0x1000 - 0x200)) programFile)
             (fromJustX <$> ramAddr)
             (liftA2 (,) <$> ramAddr <*> _memWrite)
