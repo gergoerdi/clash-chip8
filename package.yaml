@@ -27,6 +27,7 @@ dependencies:
   - transformers
   - barbies ^>= 2.0.1
   - barbies-th
+  - template-haskell
   - array
   - bytestring
   - sdl2

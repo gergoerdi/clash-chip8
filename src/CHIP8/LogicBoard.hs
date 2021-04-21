@@ -12,6 +12,7 @@ import CHIP8.Font
 
 import Data.Functor.Barbie
 import Barbies.Bare
+import qualified Language.Haskell.TH.Syntax as TH
 
 logicBoard
     :: (HiddenClockResetEnable dom)
@@ -26,7 +27,17 @@ logicBoard programFile tick keyState vidRead = (_vidAddr, _vidWrite)
   where
     CPUOut{..} = cpu CPUIn{..}
 
-    memRead = fmap (fromMaybe 0) $ memoryMap_ (Just <$> _memAddr) _memWrite $ do
-        -- Use TH to force `hexDigits` into normal form, otherwise Clash synthesis fails
-        mask @9 0x000 $ readOnly $ rom $(lift hexDigits)
-        offset 0x200 $ readWrite $ packRam $ blockRamFile (SNat @(0x1000 - 0x200)) programFile
+    fontAddr = enable (_memAddr .< 0x200) _memAddr
+    ramAddr = enable (0x200 <=. _memAddr) (_memAddr - 0x200)
+
+    -- Use TH to force `hexDigits` into normal form, otherwise Clash synthesis fails
+    font = rom $(TH.lift hexDigits) (fromJustX <$> fontAddr)
+    ram = packRam (blockRamFile (SNat @(0x1000 - 0x200)) programFile)
+            (fromJustX <$> ramAddr)
+            (liftA2 (,) <$> ramAddr <*> _memWrite)
+
+    memRead = muxA
+        [ enable (register False $ isJust <$> fontAddr) font
+        , enable (register False $ isJust <$> ramAddr) ram
+        ] .<|
+        0
