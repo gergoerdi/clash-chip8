@@ -1,6 +1,6 @@
 name: clash-chip8
 version: 0.1.0
-category: hardware, emulator
+category: Hardware, Emulator
 
 custom-setup:
   dependencies:

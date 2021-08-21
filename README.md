@@ -1,14 +1,10 @@
-CHIP-8 implemented in CλaSH
+CHIP-8 implemented in Clash
 ===========================
 
 Originally implemented for RetroChallenge 2018/09. Progress was
 documented at https://gergo.erdi.hu/blog/tags/retrochallenge/ This
-repository is a rewrite for my upcoming book on retrocomputing with
-Clash. The book is still WIP, but the code of the various examples is
-accumulating at http://github.com/gergoerdi/
-
-It uses the library that the book builds up chapter by chapter, which
-can be found separately at https://github.com/gergoerdi/retroclash-lib/
+repository is a rewrite for my book *Retrocomputing with Clash:
+Haskell for FPGA Hardware Design* at <https://unsafePerform.IO/retroclash/>.
 
 It targets the [Nexys A7-50T FPGA development board][1], but the only IO it
 needs is VGA output and a four-by-four keypad input, so it should port
