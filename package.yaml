@@ -24,7 +24,6 @@ dependencies:
   - transformers
   - barbies ^>= 2.0.1
   - barbies-th
-  - array
 
 # Anything that Clash uses by default should go here
 default-extensions:
@@ -80,12 +79,10 @@ executables:
       - optparse-applicative
       - template-haskell
       - bytestring
+      - array
     when:
-    - condition: flag(sim)
-      then:
-        buildable: true
-      else:
-        buildable: false
+    - condition: "!flag(sim)"
+      buildable: false
 
   chip8-board:
     main: simulator-board.hs
@@ -94,30 +91,25 @@ executables:
       - optparse-applicative
       - template-haskell
       - bytestring
+      - array
       - temporary
       - extra
     when:
-    - condition: flag(sim)
-      then:
-        buildable: true
-      else:
-        buildable: false
+    - condition: "!flag(sim)"
+      buildable: false
 
   chip8-vga:
     main: simulator-vga.hs
+    other-modules:
+      - CHIP8.Input
+      - CHIP8.Types
     dependencies:
       - retroclash-sim
-      - sdl2
-      - optparse-applicative
-      - template-haskell
-      - temporary
       - extra
+    verbatim:
+      x-clashilator-top-is: CHIP8.VideoTestBench
+      x-clashilator-clock: CLK_25MHZ
+      x-clashilator-clash-flags: -fclash-inline-limit=400
     when:
-    - condition: flag(sim) && flag(verilator)
-      then:
-        verbatim:
-          x-clashilator-top-is: CHIP8.VideoTestBench
-          x-clashilator-clock: CLK_25MHZ
-          x-clashilator-clash-flags: -fclash-inline-limit=400
-      else:
-        buildable: false
+    - condition: "!(flag(sim) && flag(verilator))"
+      buildable: false

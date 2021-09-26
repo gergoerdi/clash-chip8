@@ -13,7 +13,7 @@ import Data.Word
 import Data.Array.IO
 import Data.Tuple.Extra (uncurry3)
 import qualified Data.ByteString as BS
-import Data.Foldable (for_, traverse_)
+import Data.Foldable (traverse_)
 
 import System.IO
 import System.IO.Temp

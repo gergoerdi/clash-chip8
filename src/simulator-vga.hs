@@ -13,26 +13,10 @@ import RetroClash.VGA
 import RetroClash.Sim.SDL
 import RetroClash.Sim.VGA
 import RetroClash.Sim.VGASDL
-import RetroClash.Barbies
 import RetroClash.Keypad
 
 import Control.Monad.State
-import Data.Maybe
-import Data.Word
-import Data.Array ((!))
-import Data.Array.IO
-import qualified Data.ByteString as BS
-import Data.Foldable (for_)
-import Data.Bits
-import Debug.Trace
-import SDL.Event as SDL
-import SDL.Input.Keyboard
-import SDL.Input.Keyboard.Codes
 import Control.Monad.Extra
-
-import System.IO
-import System.IO.Temp
-import qualified Data.List as L
 
 scanLayout :: Matrix 4 4 Scancode
 scanLayout =
@@ -85,9 +69,3 @@ main = withRunner $ \runCycle -> do
         , screenRefreshRate = 60
         , reportFPS = True
         }
-
-binLines :: Maybe Int -> [Word8] -> [String]
-binLines size bs = L.map (L.filter (/= '_') . show . pack) bytes
-  where
-    bytes = maybe id ensureSize size bs
-    ensureSize size bs = L.take size $ bs <> L.repeat 0x00
