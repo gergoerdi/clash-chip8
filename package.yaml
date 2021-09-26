@@ -57,30 +57,44 @@ default-extensions:
   - TypeOperators
 
 ghc-options:
+  -fexpose-all-unfoldings -fno-worker-wrapper
   -fplugin GHC.TypeLits.KnownNat.Solver
   -fplugin GHC.TypeLits.Normalise
   -fplugin GHC.TypeLits.Extra.Solver
-
-source-dirs:
-  - src
 
 flags:
   verilator:
     manual: True
     default: False
 
+library:
+  source-dirs: src
+
+  exposed-modules:
+    - CHIP8
+    - CHIP8.Input
+    - CHIP8.LogicBoard
+    - CHIP8.Types
+    - CHIP8.CPU
+    - CHIP8.Font
+    - CHIP8.Video
+
 executables:
   chip8:
+    source-dirs: sim 
     main: simulator.hs
     dependencies:
+      - clash-chip8
       - retroclash-sim
       - optparse-applicative
       - template-haskell
       - bytestring
 
   chip8-board:
+    source-dirs: sim
     main: simulator-board.hs
     dependencies:
+      - clash-chip8
       - retroclash-sim
       - optparse-applicative
       - template-haskell
@@ -89,12 +103,15 @@ executables:
       - extra
 
   chip8-vga:
+    source-dirs: sim
     main: simulator-vga.hs
     dependencies:
+      - clash-chip8
       - retroclash-sim
       - sdl2
       - optparse-applicative
       - template-haskell
+      - bytestring
       - temporary
       - extra
     when:
