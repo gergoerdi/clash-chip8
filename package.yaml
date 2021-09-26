@@ -65,6 +65,9 @@ source-dirs:
   - src
 
 flags:
+  sim:
+    manual: True
+    default: True
   verilator:
     manual: True
     default: False
@@ -77,6 +80,12 @@ executables:
       - optparse-applicative
       - template-haskell
       - bytestring
+    when:
+    - condition: flag(sim)
+      then:
+        buildable: true
+      else:
+        buildable: false
 
   chip8-board:
     main: simulator-board.hs
@@ -87,6 +96,12 @@ executables:
       - bytestring
       - temporary
       - extra
+    when:
+    - condition: flag(sim)
+      then:
+        buildable: true
+      else:
+        buildable: false
 
   chip8-vga:
     main: simulator-vga.hs
@@ -98,7 +113,7 @@ executables:
       - temporary
       - extra
     when:
-    - condition: flag(verilator)
+    - condition: flag(sim) && flag(verilator)
       then:
         verbatim:
           x-clashilator-top-is: CHIP8.VideoTestBench
