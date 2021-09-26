@@ -51,11 +51,16 @@ There are three simulators included:
 * A low-level simulation that runs the whole board in Verilator, and
   interprets the VGA signal output.
 
-To build the first two simulations, just do a `stack build`. To build
-the low-level simulation, you need to install Verilator from
+Building the simulators is gated by the `sim` flag, which is set by
+default. To build the first two simulations, just do a `stack build`. 
+To build the low-level simulation, you need to install Verilator from
 https://www.veripool.org/wiki/verilator, and set the `verilator` flag
-when building; i.e. do `stack build  --flag clash-chip8:verilator` (or
+when building; i.e. do `stack build --flag clash-chip8:verilator` (or
 the equivalent setting when using Cabal directly).
+
+You can also disable the simulators with `stack build --flag clash-chip8:-sim`,
+which can be useful if you only want to build for real hardware and
+don't want to install simulation-only dependencies.
 
 [1]: https://reference.digilentinc.com/reference/programmable-logic/nexys-a7/start
 [2]: https://gergo.erdi.hu/blog/2018-09-15-very_high-level_simulation_of_a_c_ash_cpu/

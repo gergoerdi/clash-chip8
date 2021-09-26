@@ -63,6 +63,9 @@ ghc-options:
   -fplugin GHC.TypeLits.Extra.Solver
 
 flags:
+  sim:
+    manual: True
+    default: True
   verilator:
     manual: True
     default: False
@@ -89,6 +92,12 @@ executables:
       - optparse-applicative
       - template-haskell
       - bytestring
+    when:
+    - condition: flag(sim)
+      then:
+        buildable: true
+      else:
+        buildable: false
 
   chip8-board:
     source-dirs: sim
@@ -101,6 +110,12 @@ executables:
       - bytestring
       - temporary
       - extra
+    when:
+    - condition: flag(sim)
+      then:
+        buildable: true
+      else:
+        buildable: false
 
   chip8-vga:
     source-dirs: sim
@@ -115,7 +130,7 @@ executables:
       - temporary
       - extra
     when:
-    - condition: flag(verilator)
+    - condition: flag(sim) && flag(verilator)
       then:
         verbatim:
           x-clashilator-top-is: CHIP8.VideoTestBench
