@@ -1,7 +1,7 @@
 resolver: clash-1.4.3.yaml
 
 extra-deps:
-  - clash-shake-0.1.0
+  - clash-shake-0.1.1
   - clashilator-0.1.0
   - retroclash-lib-0.1.0
   - retroclash-sim-0.1.0

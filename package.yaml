@@ -11,16 +11,13 @@ custom-setup:
 dependencies:
   - base
   - clash-prelude
-  - clash-lib
-  - clash-ghc
   - ghc-typelits-natnormalise
   - ghc-typelits-extra
   - ghc-typelits-knownnat
 
   - retroclash-lib
-  - retroclash-sim
 
-  - clash-shake
+  - clash-shake ^>= 0.1.1
 
   - lens
   - mtl
@@ -28,12 +25,6 @@ dependencies:
   - barbies ^>= 2.0.1
   - barbies-th
   - array
-  - bytestring
-  - sdl2
-  - temporary
-  - extra
-  - optparse-applicative
-  - template-haskell
 
 # Anything that Clash uses by default should go here
 default-extensions:
@@ -81,12 +72,31 @@ flags:
 executables:
   chip8:
     main: simulator.hs
+    dependencies:
+      - retroclash-sim
+      - optparse-applicative
+      - template-haskell
+      - bytestring
 
   chip8-board:
     main: simulator-board.hs
+    dependencies:
+      - retroclash-sim
+      - optparse-applicative
+      - template-haskell
+      - bytestring
+      - temporary
+      - extra
 
   chip8-vga:
     main: simulator-vga.hs
+    dependencies:
+      - retroclash-sim
+      - sdl2
+      - optparse-applicative
+      - template-haskell
+      - temporary
+      - extra
     when:
     - condition: flag(verilator)
       then:
